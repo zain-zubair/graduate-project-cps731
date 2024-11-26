@@ -10,7 +10,7 @@ export default function Dashboard(){
         async function getUser(){
             const {data : {user}} = await supabase.auth.getUser();
             if (!user){
-                router.push('/auth');
+                setUser(null);
             } else{
                 setUser(user);
             }
@@ -25,10 +25,10 @@ export default function Dashboard(){
     }
     
     if (loading) return <>Loading...</>
-    if (!user) return null;
 
     return(
-        <div className="p-4">
+        user ? (
+            <div className="p-4">
             <h1 className="text-2xl mb-4">Dashboard</h1>
             <p>Welcome {user.email}</p>
             <button 
@@ -37,6 +37,12 @@ export default function Dashboard(){
             >
                 Sign Out
             </button>
-      </div>
+        </div>
+        ) : (
+        <div>
+            <h1 className="text-2xl mb-4">Not Authorized</h1>
+            <p>Please sign in to view the dashboard</p>
+        </div>
+        )
     )
 }
