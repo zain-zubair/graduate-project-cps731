@@ -15,10 +15,10 @@ export default function Dashboard() {
                 // Get authenticated user
                 const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
                 
-                console.log("Auth User:", authUser); // Add this debug log
+                console.log("Auth User:", authUser);
                 
                 if (authError || !authUser) {
-                    console.log("No auth user found:", authError); // Add this debug log
+                    console.log("No auth user found:", authError); 
                     setUser(null);
                     setLoading(false);
                     return;
@@ -31,8 +31,8 @@ export default function Dashboard() {
                     .eq('email', authUser.email)
                     .single();
     
-                console.log("DB User:", dbUser); // Add this debug log
-                console.log("DB Error:", dbError); // Add this debug log
+                console.log("DB User:", dbUser); 
+                console.log("DB Error:", dbError);
     
                 if (dbUser) {
                     // User exists in the database, redirect to their dashboard
@@ -54,7 +54,7 @@ export default function Dashboard() {
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
-            console.log("Auth state changed:", event, session); // Add this debug log
+            console.log("Auth state changed:", event, session);
             if (event === 'SIGNED_IN') {
                 checkUserAndRedirect();
             }
