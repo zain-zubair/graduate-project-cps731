@@ -13,41 +13,56 @@ export default function Dashboard() {
         async function checkUserAndRedirect() {
             try {
                 // Get authenticated user
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
                 
-                if (!user) {
+                console.log("Auth User:", authUser); // Add this debug log
+                
+                if (authError || !authUser) {
+                    console.log("No auth user found:", authError); // Add this debug log
                     setUser(null);
                     setLoading(false);
                     return;
                 }
-
+    
                 // Check if user exists in your users table
-                const { data, error } = await supabase
+                const { data: dbUser, error: dbError } = await supabase
                     .from('user')
                     .select('id')
-                    .eq('email', user.email)
+                    .eq('email', authUser.email)
                     .single();
-
-                if (error) {
-                    console.error('Error checking user:', error);
-                    setLoading(false);
-                    return;
-                }
-
-                if (data) {
+    
+                console.log("DB User:", dbUser); // Add this debug log
+                console.log("DB Error:", dbError); // Add this debug log
+    
+                if (dbUser) {
                     // User exists in the database, redirect to their dashboard
-                    router.push(`/dashboard/${data.id}`);
+                    router.push(`/dashboard/${dbUser.id}`);
                 } else {
                     // User is authenticated but hasn't created an account yet
-                    setUser(user);
+                    setUser(authUser);
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error in checkUserAndRedirect:', error);
             }
             setLoading(false);
         }
-
+    
+        // Add immediate check and periodic refresh
         checkUserAndRedirect();
+        
+        // Set up an auth state listener
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            console.log("Auth state changed:", event, session); // Add this debug log
+            if (event === 'SIGNED_IN') {
+                checkUserAndRedirect();
+            }
+        });
+    
+        return () => {
+            subscription?.unsubscribe();
+        };
     }, [router]);
 
     async function handleSignOut(event) {
