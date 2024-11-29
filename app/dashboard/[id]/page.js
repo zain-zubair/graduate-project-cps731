@@ -6,8 +6,8 @@ import React from 'react';
 
 export default function UserDashboard({ params: asyncParams }) {
     const router = useRouter();
-    const params = React.use(asyncParams); // Unwrap the promise
-    const userId = params.id; // Safely access the `id` property
+    const params = React.use(asyncParams); 
+    const userId = params.id;
     const [user, setUser] = useState(null);
     const [studentData, setStudentData] = useState(null);
     const [loading, setLoading] = useState(true);
