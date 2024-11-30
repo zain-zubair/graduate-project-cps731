@@ -13,7 +13,7 @@ export default function AuthPage() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
+  <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
     <h1>Sign In / Sign Up</h1>
     <div>
       <button onClick={() => handleRoleSelect('student')}>Student</button>
