@@ -11,12 +11,13 @@ export default function AuthForm({ role }) {
 
   async function handleSignUp(event) {
     event.preventDefault()
-    const { data, error } = await supabase.auth.signUp({ email, password }) //send request to supabase authentication backend then waits for a promise
+    const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) {
       setMessage(`Error signing up: ${error.message}`)
     } else {
       setMessage('Sign Up Successful!')
-      router.push('/dashboard')
+      // Redirect based on role prop
+      router.push(role === 'staff' ? '/dashboard_staff' : '/dashboard')
     }
   }
 
@@ -30,7 +31,8 @@ export default function AuthForm({ role }) {
       setMessage(`Error signing in: ${error.message}`)
     } else {
       setMessage('Signed in successfully!')
-      router.push('/dashboard')
+      // Redirect based on role prop
+      router.push(role === 'staff' ? '/dashboard_staff' : '/dashboard')
     }
   }
 
@@ -38,7 +40,9 @@ export default function AuthForm({ role }) {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/dashboard`, //base url + /dashboard
+        redirectTo: role === 'staff' 
+          ? `${window.location.origin}/dashboard_staff` 
+          : `${window.location.origin}/dashboard`,
       },
     })
     if (error) {

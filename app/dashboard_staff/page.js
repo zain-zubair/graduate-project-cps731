@@ -3,11 +3,11 @@ import { supabase } from '../../lib/client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function Dashboard() {
+export default function DashboardStaff(){
     const router = useRouter();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [formData, setFormData] = useState({ name: '', program: '', degree: '', year: '' });
+    const [staffData, setStaffData] = useState({ name: '', department: '', role: ''});
 
     useEffect(() => {
         async function checkUserAndRedirect() {
@@ -36,7 +36,7 @@ export default function Dashboard() {
     
                 if (dbUser) {
                     // User exists in the database, redirect to their dashboard
-                    router.push(`/dashboard/${dbUser.id}`);
+                    router.push(`/dashboard_staff/${dbUser.id}`);
                 } else {
                     // User is authenticated but hasn't created an account yet
                     setUser(authUser);
@@ -72,7 +72,7 @@ export default function Dashboard() {
 
     function handleInputChange(event) {
         const { name, value } = event.target;
-        setFormData(prev => ({
+        setStaffData(prev => ({
             ...prev,
             [name]: value
         }));
@@ -81,11 +81,11 @@ export default function Dashboard() {
     async function handleSubmit(event) {
         event.preventDefault();
         try {
-            const response = await fetch("/api/user", {
+            const response = await fetch("/api/staff", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    ...formData,
+                    ...staffData,
                     email: user.email
                 })
             });
@@ -98,7 +98,7 @@ export default function Dashboard() {
             console.log('Success:', data);
             
             // After successful account creation, redirect to the user's dashboard
-            router.push(`/dashboard/${data.id}`);
+            router.push(`/dashboard_staff/${data.id}`);
         } catch (error) {
             console.error('Error:', error);
         }
@@ -114,8 +114,10 @@ export default function Dashboard() {
             </div>
         );
     }
-
-    return (
+    
+    return(
+        <>
+        <h1>Hello this is the staff dashboard</h1>
         <div className="p-4">
             <h1 className="text-2xl mb-4">Complete Your Profile</h1>
             <p>Welcome {user.email}</p>
@@ -131,31 +133,28 @@ export default function Dashboard() {
                     <input 
                         name="name" 
                         placeholder="Name" 
-                        value={formData.name} 
+                        value={staffData.name} 
                         onChange={handleInputChange}
                         className="w-full p-2 border rounded"
                     />
                     <input 
-                        name="program" 
-                        placeholder="Program" 
-                        value={formData.program} 
+                        name="department" 
+                        placeholder="Department" 
+                        value={staffData.department} 
                         onChange={handleInputChange}
                         className="w-full p-2 border rounded"
                     />
-                    <input 
-                        name="degree" 
-                        placeholder="Degree" 
-                        value={formData.degree} 
+                    <select 
+                        name="role" 
+                        value={staffData.role}
                         onChange={handleInputChange}
                         className="w-full p-2 border rounded"
-                    />
-                    <input 
-                        name="year" 
-                        placeholder="Year of Study" 
-                        value={formData.year} 
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded"
-                    />
+                    >
+                        <option value="">Select Role</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Graduate Program Assistant">Graduate Program Assistant</option>
+                        <option value="Graduate Program Director">Graduate Program Director</option>
+                    </select>
                 </div>
                 <button 
                     type="submit"
@@ -165,5 +164,6 @@ export default function Dashboard() {
                 </button>
             </form>
         </div>
-    );
+        </>
+    )
 }
