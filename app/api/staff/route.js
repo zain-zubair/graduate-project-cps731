@@ -6,25 +6,31 @@ export async function POST(request) {
     const data = await request.json()
     console.log('Received data:', data)
 
-    // Map front-end role names to database enum values
     let userRole;
     let staffTable;
-    switch (data.role.toLowerCase()) {
+    
+    // Clean up the role string for comparison
+    const roleKey = data.role.replace(/\s+/g, '').toLowerCase()
+    
+    switch (roleKey) {
       case 'supervisor':
         userRole = 'supervisor'
         staffTable = 'supervisor'
         break
-      case 'graduate program assistant':
-        userRole = 'gpa'
+      case 'graduateprogramassistant':
+        userRole = 'graduate_program_assistant'
         staffTable = 'graduate_program_assistant'
         break
-      case 'graduate program director':
-        userRole = 'gpd'
+      case 'graduateprogramdirector':
+        userRole = 'graduate_program_director' 
         staffTable = 'graduate_program_director'
         break
       default:
-        throw new Error('Invalid staff role')
+        console.error('Invalid role received:', data.role)
+        throw new Error(`Invalid staff role: ${data.role}`)
     }
+
+    console.log('Mapped role:', { original: data.role, userRole, staffTable })
 
     // Create user record with specific role
     const { data: userData, error: userError } = await supabase
@@ -32,13 +38,16 @@ export async function POST(request) {
       .insert([{
         name: data.name,
         email: data.email,
-        role: userRole  // Use specific role enum value
+        role: userRole
       }])
       .select()
       .single()
 
     console.log('User insert result:', userData)
-    if (userError) throw userError
+    if (userError) {
+      console.error('User insert error:', userError)
+      throw userError
+    }
 
     const { data: staffData, error: staffError } = await supabase
       .from(staffTable)
@@ -50,7 +59,10 @@ export async function POST(request) {
       .single()
 
     console.log(`${staffTable} insert result:`, staffData)
-    if (staffError) throw staffError
+    if (staffError) {
+      console.error('Staff insert error:', staffError)
+      throw staffError
+    }
 
     return NextResponse.json({ 
       user: userData, 
@@ -59,6 +71,9 @@ export async function POST(request) {
     }, { status: 201 })
   } catch (error) {
     console.error('Error:', error)
-    return NextResponse.json({ error: error.message }, { status: 400 })
+    return NextResponse.json({ 
+      error: error.message,
+      details: error.details || 'No additional details'
+    }, { status: 400 })
   }
 }
