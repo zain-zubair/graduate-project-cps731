@@ -5,7 +5,7 @@ import AuthForm from '../../component/authForm'
 export default function staffAuth() {
   return (
     <div>
-      <AuthForm role="staff" />
+      <AuthForm role="Staff" />
     </div>
   )
 }
