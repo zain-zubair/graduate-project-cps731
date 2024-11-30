@@ -11,6 +11,8 @@ export default function StaffDashboard({ params: asyncParams }) {
     const [user, setUser] = useState(null);
     const [staffData, setStaffData] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [assignedForms, setAssignedForms] = useState([]); 
+
 
     useEffect(() => {
         async function fetchUserData() {
@@ -76,6 +78,19 @@ export default function StaffDashboard({ params: asyncParams }) {
                     console.error('Error fetching staff data:', staffError);
                 } else {
                     setStaffData(staffData);
+                }
+
+                if (userData.role === 'supervisor') {
+                    const { data: forms, error: formsError } = await supabase
+                        .from('progress_form')
+                        .select('id, term, created_at, status, student_id') 
+                        .eq('supervisor_id',  staffData.id); 
+
+                    if (formsError) {
+                        console.error('Error fetching assigned forms:', formsError);
+                    } else {
+                        setAssignedForms(forms);
+                    }
                 }
 
             } catch (error) {
@@ -148,6 +163,32 @@ export default function StaffDashboard({ params: asyncParams }) {
                     </div>
                 )}
             </div>
+
+            {/* Display Assigned Progress Forms for Supervisors */}
+            {user.role === 'supervisor' && (
+                    <section className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">Assigned Progress Forms</h2>
+                        {assignedForms.length > 0 ? (
+                            <ul>
+                                {assignedForms.map((form) => (
+                                    <li key={form.id} className="mb-4 border-b pb-2">
+                                        <p><strong>Term:</strong> {form.term}</p>
+                                        <p><strong>Submitted At:</strong> {new Date(form.created_at).toLocaleDateString()}</p>
+                                        <p><strong>Status:</strong> {form.status}</p>
+                                        <button
+                                            onClick={() => router.push(`/dashboard_staff/${userId}/feedback/${form.id}`)}
+                                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                                        >
+                                            Provide Feedback
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p>No assigned progress forms.</p>
+                        )}
+                    </section>
+                )}
         </div>
     );
 }
