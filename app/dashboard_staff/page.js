@@ -24,7 +24,7 @@ export default function DashboardStaff(){
                     return;
                 }
     
-                // Check if user exists in your users table
+                // Check if user exists in user table
                 const { data: dbUser, error: dbError } = await supabase
                     .from('user')
                     .select('id')
