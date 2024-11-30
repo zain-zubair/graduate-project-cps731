@@ -151,9 +151,9 @@ export default function DashboardStaff(){
                         className="w-full p-2 border rounded"
                     >
                         <option value="">Select Role</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Graduate Program Assistant">Graduate Program Assistant</option>
-                        <option value="Graduate Program Director">Graduate Program Director</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="graduateprogramassistant">Graduate Program Assistant</option>
+                        <option value="graduateprogramdirector">Graduate Program Director</option>
                     </select>
                 </div>
                 <button 

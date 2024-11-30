@@ -1,19 +1,32 @@
 'use client';
+
 import { supabase } from '../../../lib/client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 
-export default function UserDashboard({ params: asyncParams }) {
+export default function UserDashboard({ params }) {
     const router = useRouter();
-    const params = React.use(asyncParams); 
-    const userId = params.id;
+    const [userId, setUserId] = useState(null);
     const [user, setUser] = useState(null);
     const [studentData, setStudentData] = useState(null);
+    const [supervisorInfo, setSupervisorInfo] = useState(null);
     const [loading, setLoading] = useState(true);
+
+    // Unwrap `params` with `React.use()`
+    const unwrappedParams = React.use(params);
+    const { id } = unwrappedParams || {};
+
+    useEffect(() => {
+        if (id) {
+            setUserId(id);
+        }
+    }, [id]);
 
     useEffect(() => {
         async function fetchUserData() {
+            if (!userId) return;
+
             try {
                 // Check if user is authenticated
                 const { data: { user: authUser } } = await supabase.auth.getUser();
@@ -35,7 +48,7 @@ export default function UserDashboard({ params: asyncParams }) {
                     return;
                 }
 
-                // Only allow access if the authenticated user is viewing their own dashboard
+                // Ensure the authenticated user can only view their own data
                 if (userData.email !== authUser.email) {
                     router.push('/dashboard');
                     return;
@@ -51,6 +64,29 @@ export default function UserDashboard({ params: asyncParams }) {
                     console.error('Error fetching student:', studentError);
                 }
 
+                // Fetch supervisor data if available
+                if (studentData) {
+                    const { data: supervisorRelation, error: relationError } = await supabase
+                        .from('student_supervisor_relationship')
+                        .select(`
+                            supervisor:supervisor_id (
+                                id,
+                                user_id,
+                                department,
+                                user:user_id (
+                                    name,
+                                    email
+                                )
+                            )
+                        `)
+                        .eq('student_id', studentData.id)
+                        .single();
+
+                    if (!relationError && supervisorRelation) {
+                        setSupervisorInfo(supervisorRelation.supervisor);
+                    }
+                }
+
                 setUser(userData);
                 setStudentData(studentData);
             } catch (error) {
@@ -60,9 +96,7 @@ export default function UserDashboard({ params: asyncParams }) {
             }
         }
 
-        if (userId) {
-            fetchUserData();
-        }
+        fetchUserData();
     }, [userId, router]);
 
     async function handleSignOut() {
@@ -104,21 +138,45 @@ export default function UserDashboard({ params: asyncParams }) {
                     </div>
                 </div>
                 {studentData && (
-                    <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4">Academic Information</h2>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <p className="text-gray-600">Program</p>
-                                <p className="font-medium">{studentData.program}</p>
+                    <div className="space-y-6">
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-xl font-semibold mb-4">Academic Information</h2>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-gray-600">Program</p>
+                                    <p className="font-medium">{studentData.program}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-600">Degree</p>
+                                    <p className="font-medium">{studentData.degree}</p>
+                                </div>
+                                <div>
+                                    <p className="text-gray-600">Year of Study</p>
+                                    <p className="font-medium">{studentData.year_of_study}</p>
+                                </div>
                             </div>
-                            <div>
-                                <p className="text-gray-600">Degree</p>
-                                <p className="font-medium">{studentData.degree}</p>
-                            </div>
-                            <div>
-                                <p className="text-gray-600">Year of Study</p>
-                                <p className="font-medium">{studentData.year_of_study}</p>
-                            </div>
+                        </div>
+
+                        <div className="bg-white shadow rounded-lg p-6">
+                            <h2 className="text-xl font-semibold mb-4">Supervisor Information</h2>
+                            {supervisorInfo ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p className="text-gray-600">Supervisor Name</p>
+                                        <p className="font-medium">{supervisorInfo.user.name}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Supervisor Email</p>
+                                        <p className="font-medium">{supervisorInfo.user.email}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-600">Department</p>
+                                        <p className="font-medium">{supervisorInfo.department}</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-gray-500 italic">No supervisor assigned yet.</p>
+                            )}
                         </div>
                     </div>
                 )}
