@@ -14,7 +14,14 @@ export default function AuthPage() {
 
   return (
     <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
-      <h1>Sign In / Sign Up</h1>
+      
+      <img
+      src="/TMU_GradTrack_logo.png" 
+      alt="TMU GradTrack Logo" 
+      style={{ width: '300px', marginBottom: '20px' }} 
+      />
+
+      <h1>Sign Up</h1>
       <div style={{ marginTop: '20px' }}>
         <button
           style={{
