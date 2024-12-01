@@ -15,28 +15,27 @@ export default function DashboardStaff() {
             try {
                 const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
                 
-                if (authError || !authUser) {
-                    setUser(null);
-                    setLoading(false);
-                    return;
-                }
-    
+            // Only proceed with database query if we have an email
+            if (authUser.email) {
                 const { data: dbUser, error: dbError } = await supabase
                     .from('user')
                     .select('id')
                     .eq('email', authUser.email)
-                    .single();
-    
-                if (dbUser) {
-                    router.push(`/dashboard_staff/${dbUser.id}`);
+                    .maybeSingle();  // Changed from single() to maybeSingle()
+
+                if (dbUser?.id) {
+                    setTimeout(() => {
+                        router.push(`/dashboard_staff/${dbUser.id}`);
+                    }, 500);
                 } else {
                     setUser(authUser);
                 }
-            } catch (error) {
-                console.error('Error in checkUserAndRedirect:', error);
             }
-            setLoading(false);
+        } catch (error) {
+            console.error('Error in checkUserAndRedirect:', error);
         }
+        setLoading(false);
+    }
     
         checkUserAndRedirect();
         
@@ -44,7 +43,7 @@ export default function DashboardStaff() {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
             if (event === 'SIGNED_IN') {
-                checkUserAndRedirect();
+                setTimeout(checkUserAndRedirect, 1000); // Add delay for auth state change
             }
         });
     
@@ -69,6 +68,7 @@ export default function DashboardStaff() {
     async function handleSubmit(event) {
         event.preventDefault();
         try {
+            setLoading(true);  // Add loading state
             const response = await fetch("/api/staff", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -83,9 +83,24 @@ export default function DashboardStaff() {
             }
             
             const data = await response.json();
-            router.push(`/dashboard_staff/${data.id}`);
+            console.log('Success:', data);
+            
+            // Verify the user exists before redirecting
+            const { data: checkUser } = await supabase
+                .from('user')
+                .select('id')
+                .eq('id', data.user.id)
+                .single();
+                
+            if (checkUser) {
+                setTimeout(() => {
+                    router.push(`/dashboard_staff/${data.user.id}`);
+                }, 500);
+            }
         } catch (error) {
             console.error('Error:', error);
+        } finally {
+            setLoading(false);
         }
     }
 

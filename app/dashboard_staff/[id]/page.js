@@ -9,15 +9,23 @@ import './StaffDashboard.css';
 export default function StaffDashboard({ params: asyncParams }) {
     const router = useRouter();
     const params = React.use(asyncParams);
-    const userId = params.id;
+    const [userId, setUserId] = useState(null);
     const [user, setUser] = useState(null);
     const [staffData, setStaffData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [assignedForms, setAssignedForms] = useState([]); 
 
     useEffect(() => {
+        if (params?.id) {
+            console.log("Setting userId from params:", params.id);
+            setUserId(params.id);
+        }
+    }, [params]);
+    
+    useEffect(() => {
+        if (!userId) return;
         fetchUserData();
-    }, [userId, router]);
+    }, [userId]);
 
     async function fetchUserData() {
         try {
@@ -38,7 +46,7 @@ export default function StaffDashboard({ params: asyncParams }) {
                 .from('user')
                 .select('*')
                 .eq('id', userId)
-                .single();
+                .maybeSingle();
 
             if (userError || !userData) {
                 console.error('Error fetching user:', userError);
