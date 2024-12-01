@@ -13,12 +13,43 @@ export default function AuthPage() {
   };
 
   return (
-  <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
-    <h1>Sign In / Sign Up</h1>
-    <div>
-      <button onClick={() => handleRoleSelect('student')}>Student</button>
-      <button onClick={() => handleRoleSelect('staff')}>Staff</button>
+    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px', textAlign: 'center' }}>
+      
+      <img
+      src="/TMU_GradTrack_logo.png" 
+      alt="TMU GradTrack Logo" 
+      style={{ width: '300px', marginBottom: '20px' }} 
+      />
+
+      <h1>Sign Up</h1>
+      <div style={{ marginTop: '20px' }}>
+        <button
+          style={{
+            padding: '10px 20px',
+            marginRight: '10px',
+            backgroundColor: '#007BFF',
+            color: '#FFF',
+            border: 'none',
+            borderRadius: '5px',
+          }}
+          onClick={() => handleRoleSelect('student')}
+        >
+          Student
+        </button>
+        <button
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#28A745',
+            color: '#FFF',
+            border: 'none',
+            borderRadius: '5px',
+          }}
+          onClick={() => handleRoleSelect('staff')}
+        >
+          Staff
+        </button>
+      </div>
     </div>
-  </div>
-  )
+  );
+  
 }

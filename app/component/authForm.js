@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/client'
 import { useRouter } from 'next/navigation'
+import { ChromeIcon as Google } from 'lucide-react'
+import './auth.css'
 
 export default function AuthForm({ role }) {
   const router = useRouter()
@@ -16,7 +18,6 @@ export default function AuthForm({ role }) {
       setMessage(`Error signing up: ${error.message}`)
     } else {
       setMessage('Sign Up Successful!')
-      // Redirect based on role prop
       router.push(role === 'staff' ? '/dashboard_staff' : '/dashboard')
     }
   }
@@ -31,12 +32,12 @@ export default function AuthForm({ role }) {
       setMessage(`Error signing in: ${error.message}`)
     } else {
       setMessage('Signed in successfully!')
-      // Redirect based on role prop
       router.push(role === 'staff' ? '/dashboard_staff' : '/dashboard')
     }
   }
 
   async function handleSignInWithOAuth(event) {
+    event.preventDefault()
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
@@ -51,28 +52,37 @@ export default function AuthForm({ role }) {
   }
 
   return (
-    <div>
-      <h1>{role} Auth</h1>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        style={{ display: 'block', marginBottom: '10px' }}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        style={{ display: 'block', marginBottom: '10px' }}
-      />
-      <div>
-        <button onClick={handleSignUp}>Sign Up</button>
-        <button onClick={handleSignIn}>Sign In</button>
-        <button onClick={handleSignInWithOAuth}>Sign In with Google</button>
-      </div>
-      <p>{message}</p>
+    <div className="auth-container">
+      <form className="auth-form">
+        <h1 className="auth-header">Welcome</h1>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          className="auth-input"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className="auth-input"
+        />
+        <div className="auth-buttons">
+          <button onClick={handleSignUp} className="auth-button signup">
+            Sign Up
+          </button>
+          <button onClick={handleSignIn} className="auth-button signin">
+            Sign In
+          </button>
+        </div>
+        <button onClick={handleSignInWithOAuth} className="auth-button google">
+          <Google size={18} />
+          Sign In with Google
+        </button>
+        {message && <p className="auth-message">{message}</p>}
+      </form>
     </div>
   )
 }
