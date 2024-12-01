@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../../../lib/client'
+import { supabase } from '../../lib/client'
 
 const ProgressForm = ({ studentId, supervisorId }) => {
   const [formData, setFormData] = useState({

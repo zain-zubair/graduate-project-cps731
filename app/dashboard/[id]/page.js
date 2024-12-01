@@ -4,7 +4,7 @@ import { supabase } from '../../../lib/client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
-import ProgressForm from './student-form'
+import ProgressForm from '../../component/student-form'
 
 export default function UserDashboard({ params }) {
   const router = useRouter()
