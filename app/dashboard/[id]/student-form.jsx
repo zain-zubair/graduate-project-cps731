@@ -28,21 +28,55 @@ const ProgressForm = ({ studentId, supervisorId }) => {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-
+    e.preventDefault();
+  
     if (!supervisorId) {
-      alert('Cannot submit progress form if you have no assigned supervisor.')
-      return
+      alert('Cannot submit progress form if you have no assigned supervisor.');
+      return;
     }
-
+  
     try {
-      const { error } = await supabase.from('progress_form').insert(formData)
-
-      if (error) {
-        throw error
+      // Fetch the supervisor's email by joining the 'supervisor' and 'user' tables
+      const { data: supervisorData, error: supervisorError } = await supabase
+        .from('supervisor')
+        .select('user ( email )')
+        .eq('id', supervisorId)
+        .single();
+  
+      if (supervisorError || !supervisorData) {
+        throw new Error('Unable to retrieve supervisor email.');
       }
-
-      alert('Form submitted successfully!')
+  
+      const supervisorEmail = supervisorData.user.email;
+  
+      // Insert the progress form
+      const { error } = await supabase.from('progress_form').insert(formData);
+  
+      if (error) {
+        throw error;
+      }
+  
+      // Send the notification
+      const notificationResponse = await fetch('/api/notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: 'oeunvicheka95@gmail.com',
+          subject: 'New Progress Form',
+          message: `A new progress form was submitted for ${formData.term} by student ${formData.student_id}.`
+        })
+      });      
+  
+      const result = await notificationResponse.json();
+      console.log('Notification result:', result);
+  
+      if (!notificationResponse.ok) {
+        throw new Error(result.error || 'Failed to send notification');
+      }
+  
+      alert('Form submitted successfully!');
+  
+      // Reset form data
       setFormData({
         term: '',
         start_term: '',
@@ -60,12 +94,15 @@ const ProgressForm = ({ studentId, supervisorId }) => {
         status: '',
         student_id: studentId,
         supervisor_id: supervisorId,
-      })
+      });
     } catch (error) {
-      console.error('Error submitting form:', error.message)
-      alert('Error submitting form: ' + error.message)
+      console.error('Error submitting form:', error.message);
+      alert('Error submitting form: ' + error.message);
     }
-  }
+  };
+  
+  
+  
 
   return (
     <form onSubmit={handleSubmit} className="progress-form">
