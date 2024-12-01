@@ -1,0 +1,226 @@
+/* Main Layout */
+.dashboard {
+    background-color: #f5f7fa;
+    min-height: 100vh;
+    padding: 2rem;
+  }
+  
+  .dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  /* Header Styles */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  .page-title {
+    font-size: 2.5rem;
+    color: #2d3748;
+    font-weight: 700;
+    margin: 0;
+  }
+  
+  .sign-out-btn {
+    padding: 0.75rem 1.5rem;
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .sign-out-btn:hover {
+    background-color: #b91c1c;
+    transform: translateY(-2px);
+  }
+  
+  /* Card Styles */
+  .card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    transition: transform 0.2s ease;
+  }
+  
+  .card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .card-title {
+    font-size: 1.5rem;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e2e8f0;
+  }
+  
+  /* Information Grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+  
+  .info-item {
+    margin-bottom: 1rem;
+  }
+  
+  .info-label {
+    color: #718096;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+  
+  .info-value {
+    color: #2d3748;
+    font-size: 1.1rem;
+    font-weight: 500;
+  }
+  
+  /* Submissions Section */
+  .submissions-section {
+    margin-top: 3rem;
+  }
+  
+  .section-title {
+    font-size: 1.8rem;
+    color: #2d3748;
+    margin-bottom: 1.5rem;
+  }
+  
+  .subsection-title {
+    font-size: 1.3rem;
+    color: #2d3748;
+    margin-bottom: 1rem;
+  }
+  
+  .submissions-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .submission-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+  }
+  
+  .submission-item:hover {
+    background-color: #f1f5f9;
+  }
+  
+  .submission-info {
+    flex-grow: 1;
+  }
+  
+  .submission-term {
+    font-size: 1.1rem;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+  }
+  
+  .submission-date {
+    color: #718096;
+    font-size: 0.9rem;
+  }
+  
+  .view-feedback-btn {
+    padding: 0.5rem 1rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .view-feedback-btn:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+  }
+  
+  /* New Submission Section */
+  .new-submission-section {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Loading and Error States */
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    color: #4a5568;
+  }
+  
+  .error-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-size: 1.2rem;
+    color: #e53e3e;
+  }
+  
+  .no-supervisor, 
+  .no-submissions {
+    color: #718096;
+    font-style: italic;
+    padding: 1rem;
+    background-color: #f8fafc;
+    border-radius: 6px;
+    text-align: center;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .dashboard {
+      padding: 1rem;
+    }
+    
+    .header {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+    
+    .page-title {
+      font-size: 2rem;
+    }
+    
+    .info-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .submission-item {
+      flex-direction: column;
+      gap: 1rem;
+      text-align: center;
+    }
+    
+    .view-feedback-btn {
+      width: 100%;
+    }
+  }
