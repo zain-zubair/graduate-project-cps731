@@ -1,11 +1,13 @@
 'use client'
 
 import AuthForm from '../../component/authForm'
+import './student.css'
 
 export default function studentAuth() {
   return (
-    <div>
-      <AuthForm role="student" />
-    </div>
+    <div className="auth-container">
+    <h2 className="auth-heading">Staff Login</h2>
+    <AuthForm role="student" />
+  </div>
   )
 }

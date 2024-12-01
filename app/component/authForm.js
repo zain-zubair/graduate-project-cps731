@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/client'
 import { useRouter } from 'next/navigation'
+import { ChromeIcon as Google } from 'lucide-react'
+import './auth.css'
 
 export default function AuthForm({ role }) {
   const router = useRouter()
@@ -16,7 +18,6 @@ export default function AuthForm({ role }) {
       setMessage(`Error signing up: ${error.message}`)
     } else {
       setMessage('Sign Up Successful!')
-      // Redirect based on role prop
       router.push(role === 'staff' ? '/dashboard_staff' : '/dashboard')
     }
   }
@@ -31,7 +32,6 @@ export default function AuthForm({ role }) {
       setMessage(`Error signing in: ${error.message}`)
     } else {
       setMessage('Signed in successfully!')
-      // Redirect based on role prop
       router.push(role === 'staff' ? '/dashboard_staff' : '/dashboard')
     }
   }
@@ -51,98 +51,37 @@ export default function AuthForm({ role }) {
   }
 
   return (
-    <div>
-      {role === 'student' ? (
-        <h1>Student Login</h1>
-      ) : (
-        <h1>Staff Login</h1>
-      )}
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        style={{ display: 'block',
-        marginBottom: "10px",
-        width: "200px", // Adjust width
-        height: "10px", // Adjust height
-        padding: "10px", // Add padding
-        fontSize: "16px", // Adjust font size
-        borderRadius: "5px", // Add rounded corners
-        border: "1px solid #ccc", // Add border styling      
-      
-      }}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        style={{ display: 'block', 
-        marginBottom: '10px',
-        width: "200px", // Adjust width
-        height: "10px", // Adjust height
-        padding: "10px", // Add padding
-        fontSize: "16px", // Adjust font size
-        borderRadius: "5px", // Add rounded corners
-        border: "1px solid #ccc", // Add border styling  
-       }}
-      />
-      <div>
-      <button
-      onClick={handleSignUp}
-  style={{
-    backgroundColor: '#4CAF50', // Green color
-    color: 'white',
-    padding: '10px 20px',
-    margin: '5px',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-
-  }}
->
-  Sign Up
-</button>
-<button
-  onClick={handleSignIn}
-  style={{
-    backgroundColor: '#008CBA', // Blue color
-    color: 'white',
-    padding: '10px 20px',
-    margin: '5px',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    transition: 'transform 0.2s ease',
-  }}
->
-  Sign In
-</button>
-<button
-  onClick={handleSignInWithOAuth}
-  style={{
-    backgroundColor: '#f4f4f4', // Light grey color
-    color: '#333',
-    padding: '10px 20px',
-    margin: '5px',
-    border: '1px solid #ccc',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '16px',
-    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    transition: 'transform 0.2s ease',
-  }}
->
-  Sign In with Google
-</button>
-
-      </div>
-      <p>{message}</p>
+    <div className="auth-container">
+      <form className="auth-form">
+        <h1 className="auth-header">Welcome</h1>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          className="auth-input"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className="auth-input"
+        />
+        <div className="auth-buttons">
+          <button onClick={handleSignUp} className="auth-button signup">
+            Sign Up
+          </button>
+          <button onClick={handleSignIn} className="auth-button signin">
+            Sign In
+          </button>
+        </div>
+        <button onClick={handleSignInWithOAuth} className="auth-button google">
+          <Google size={18} />
+          Sign In with Google
+        </button>
+        {message && <p className="auth-message">{message}</p>}
+      </form>
     </div>
   )
 }
