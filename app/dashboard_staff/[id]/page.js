@@ -14,7 +14,6 @@ export default function StaffDashboard({ params: asyncParams }) {
     const [loading, setLoading] = useState(true);
     const [assignedForms, setAssignedForms] = useState([]); 
 
-
     useEffect(() => {
         async function fetchUserData() {
             try {
@@ -45,36 +44,18 @@ export default function StaffDashboard({ params: asyncParams }) {
                     return;
                 }
 
-                // Log user data for debugging
-                console.log('Fetched user data:', userData);
-
-                // Ensure the authenticated user matches the requested user
-                if (userData.email !== authUser.email) {
-                    console.error('User email mismatch. Unauthorized access.');
-                    router.push('/auth');
-                    return;
-                }
-
                 setUser(userData);
 
-                // Debug log for role
-                console.log('User role:', userData.role);
-
-                // Map roles to staff tables using full names
+                // Map roles to staff tables
                 const staffTableMap = {
                     'supervisor': 'supervisor',
                     'graduate_program_assistant': 'graduate_program_assistant',
                     'graduate_program_director': 'graduate_program_director'
                 };
 
-                // Debug log for staff table mapping
-                console.log('Looking up staff table for role:', userData.role);
-                console.log('Available mappings:', staffTableMap);
-
                 const staffTable = staffTableMap[userData.role];
                 if (!staffTable) {
                     console.error(`Invalid staff role: ${userData.role}`);
-                    console.error('Valid roles are:', Object.keys(staffTableMap));
                     setLoading(false);
                     return;
                 }
@@ -89,20 +70,34 @@ export default function StaffDashboard({ params: asyncParams }) {
                 if (staffError) {
                     console.error('Error fetching staff data:', staffError);
                 } else {
-                    console.log('Staff data:', staffData);
                     setStaffData(staffData);
                 }
 
+                // Fetch forms based on role
+                let formsQuery;
                 if (userData.role === 'supervisor') {
-                    const { data: forms, error: formsError } = await supabase
+                    formsQuery = supabase
                         .from('progress_form')
-                        .select('id, term, created_at, status, student_id') 
-                        .eq('supervisor_id',  staffData.id); 
+                        .select('*')  // Selecting all fields for consistency
+                        .eq('supervisor_id', staffData.id);
+                } else if (userData.role === 'graduate_program_assistant') {
+                    formsQuery = supabase
+                        .from('progress_form')
+                        .select('*')
+                        .eq('status', 'submitted_by_supervisor');
+                } else if (userData.role === 'graduate_program_director') {
+                    formsQuery = supabase
+                        .from('progress_form')
+                        .select('*')
+                        .eq('status', 'approved_by_gpa');
+                }
 
+                if (formsQuery) {
+                    const { data: forms, error: formsError } = await formsQuery;
                     if (formsError) {
-                        console.error('Error fetching assigned forms:', formsError);
+                        console.error('Error fetching forms:', formsError);
                     } else {
-                        setAssignedForms(forms);
+                        setAssignedForms(forms || []);
                     }
                 }
 
@@ -135,10 +130,6 @@ export default function StaffDashboard({ params: asyncParams }) {
             'graduate_program_assistant': 'Graduate Program Assistant',
             'graduate_program_director': 'Graduate Program Director'
         };
-        
-        console.log('Getting title for role:', role);
-        console.log('Available titles:', roleTitles);
-        
         return roleTitles[role] || role;
     };
 
@@ -154,6 +145,7 @@ export default function StaffDashboard({ params: asyncParams }) {
                         Sign Out
                     </button>
                 </div>
+
                 <div className="bg-white shadow rounded-lg p-6 mb-6">
                     <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
                     <div className="grid grid-cols-2 gap-4">
@@ -177,38 +169,136 @@ export default function StaffDashboard({ params: asyncParams }) {
                         )}
                     </div>
                 </div>
+
+                {/* Display Progress Forms for all staff roles */}
+                {(user.role === 'supervisor' || user.role === 'graduate_program_assistant' || user.role === 'graduate_program_director') && (
+                    <section className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">
+                            {user.role === 'supervisor' && 'Assigned Progress Forms'}
+                            {user.role === 'graduate_program_assistant' && 'Forms Pending GPA Review'}
+                            {user.role === 'graduate_program_director' && 'Forms Pending GPD Review'}
+                        </h2>
+                        {assignedForms.length > 0 ? (
+                            <ul className="space-y-4">
+                                {assignedForms.map((form) => (
+                                    <li key={form.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                                        <div className="flex justify-between items-start">
+                                            <div className="space-y-3 flex-grow">
+                                                <div>
+                                                    <p><strong>Term:</strong> {form.term}</p>
+                                                    <p><strong>Submitted At:</strong> {new Date(form.created_at).toLocaleDateString()}</p>
+                                                </div>
+                                                
+                                                <div className="flex items-center gap-4">
+                                                    <div className="flex-grow">
+                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                                        <select
+                                                            value={form.review_status || ''}
+                                                            onChange={async (e) => {
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('progress_form')
+                                                                        .update({ review_status: e.target.value })
+                                                                        .eq('id', form.id);
+                                                                    
+                                                                    if (error) throw error;
+                                                                    window.location.reload();
+                                                                } catch (error) {
+                                                                    console.error('Error updating status:', error);
+                                                                    alert('Failed to update status');
+                                                                }
+                                                            }}
+                                                            className="w-full border rounded p-2"
+                                                            disabled={user.role === 'student'}
+                                                        >
+                                                            {user.role === 'supervisor' && (
+                                                                <>
+                                                                    <option value="in_progress">In Progress</option>
+                                                                    <option value="disapproved">Disapproved</option>
+                                                                    <option value="approved">Approved</option>
+                                                                </>
+                                                            )}
+                                                            {(user.role === 'graduate_program_assistant' || user.role === 'graduate_program_director') && (
+                                                                <>
+                                                                    <option value="disapproved">Disapproved</option>
+                                                                    <option value="approved">Approved</option>
+                                                                </>
+                                                            )}
+                                                        </select>
+                                                    </div>
+                                                    
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={() => router.push(`/dashboard_staff/${userId}/feedback/${form.id}`)}
+                                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            {user.role === 'supervisor' ? 'Provide Feedback' : 'Review Form'}
+                                                        </button>
+
+                                                        {user.role === 'supervisor' && form.review_status === 'approved' && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        const { error } = await supabase
+                                                                            .from('progress_form')
+                                                                            .update({ status: 'submitted_by_supervisor' })
+                                                                            .eq('id', form.id);
+                                                                        
+                                                                        if (error) throw error;
+                                                                        alert('Successfully submitted to GPA');
+                                                                        window.location.reload();
+                                                                    } catch (error) {
+                                                                        console.error('Error:', error);
+                                                                        alert('Failed to submit to GPA');
+                                                                    }
+                                                                }}
+                                                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                                            >
+                                                                Submit to GPA
+                                                            </button>
+                                                        )}
+
+                                                        {user.role === 'graduate_program_assistant' && form.review_status === 'approved' && (
+                                                            <button
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        const { error } = await supabase
+                                                                            .from('progress_form')
+                                                                            .update({ status: 'approved_by_gpa' })
+                                                                            .eq('id', form.id);
+                                                                        
+                                                                        if (error) throw error;
+                                                                        alert('Successfully submitted to GPD');
+                                                                        window.location.reload();
+                                                                    } catch (error) {
+                                                                        console.error('Error:', error);
+                                                                        alert('Failed to submit to GPD');
+                                                                    }
+                                                                }}
+                                                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                                            >
+                                                                Submit to GPD
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        ) : (
+                            <p className="text-gray-500">No forms requiring your attention.</p>
+                        )}
+                    </section>
+                )}
+
                 {user?.role && (
                     <div className="mt-8">
                         <StaffSelect role={user.role} userId={userId} />
                     </div>
                 )}
             </div>
-
-            {/* Display Assigned Progress Forms for Supervisors */}
-            {user.role === 'supervisor' && (
-                    <section className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4">Assigned Progress Forms</h2>
-                        {assignedForms.length > 0 ? (
-                            <ul>
-                                {assignedForms.map((form) => (
-                                    <li key={form.id} className="mb-4 border-b pb-2">
-                                        <p><strong>Term:</strong> {form.term}</p>
-                                        <p><strong>Submitted At:</strong> {new Date(form.created_at).toLocaleDateString()}</p>
-                                        <p><strong>Status:</strong> {form.status}</p>
-                                        <button
-                                            onClick={() => router.push(`/dashboard_staff/${userId}/feedback/${form.id}`)}
-                                            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                                        >
-                                            Provide Feedback
-                                        </button>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <p>No assigned progress forms.</p>
-                        )}
-                    </section>
-                )}
         </div>
     );
 }
