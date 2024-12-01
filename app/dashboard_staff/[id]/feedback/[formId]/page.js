@@ -2,11 +2,13 @@
 import { supabase } from '../../../../../lib/client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import React from 'react';
 
-export default function FeedbackPage({ params: asyncParams }) {
-    const params = React.use(asyncParams);
-    const { formId } = params; 
+import { use } from 'react';
+
+export default function FeedbackPage({ params }) {
+    // Correctly unwrap params using React.use()
+    const unwrappedParams = use(params);
+    const { formId } = unwrappedParams;
     const [formDetails, setFormDetails] = useState(null);
     const [feedback, setFeedback] = useState({
         self_motivation: '',
@@ -16,12 +18,18 @@ export default function FeedbackPage({ params: asyncParams }) {
         comments: '',
     });
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const router = useRouter();
 
     useEffect(() => {
         async function fetchFormDetails() {
+            if (!formId) {
+                setError('No form ID provided');
+                setLoading(false);
+                return;
+            }
+
             try {
-                
                 const { data: formData, error: formError } = await supabase
                     .from('progress_form')
                     .select('*')
@@ -29,21 +37,34 @@ export default function FeedbackPage({ params: asyncParams }) {
                     .single();
 
                 if (formError) {
+                    setError('Error fetching form details');
                     console.error('Error fetching form details:', formError);
                     return;
                 }
 
+                if (!formData) {
+                    setError('Form not found');
+                    return;
+                }
+
                 setFormDetails(formData);
+                // Pre-populate feedback state with existing data if available
+                setFeedback({
+                    self_motivation: formData.self_motivation || '',
+                    research_skills: formData.research_skills || '',
+                    research_progress: formData.research_progress || '',
+                    overall_performance: formData.overall_performance || '',
+                    comments: formData.comments || '',
+                });
             } catch (error) {
+                setError('An unexpected error occurred');
                 console.error('Error fetching form details:', error);
             } finally {
                 setLoading(false);
             }
         }
 
-        if (formId) {
-            fetchFormDetails();
-        }
+        fetchFormDetails();
     }, [formId]);
 
     const handleInputChange = (e) => {
@@ -56,8 +77,7 @@ export default function FeedbackPage({ params: asyncParams }) {
 
     const handleSaveAnnotations = async () => {
         try {
-           
-            const { error } = await supabase
+            const { error: updateError } = await supabase
                 .from('progress_form')
                 .update({
                     self_motivation: feedback.self_motivation,
@@ -68,58 +88,113 @@ export default function FeedbackPage({ params: asyncParams }) {
                 })
                 .eq('id', formId);
 
-            if (error) {
-                console.error('Error saving annotations:', error);
-                alert('Failed to save annotations.');
-            } else {
-                alert('Annotations saved successfully.');
+            if (updateError) {
+                throw updateError;
             }
+
+            alert('Annotations saved successfully.');
         } catch (error) {
             console.error('Error saving annotations:', error);
+            alert('Failed to save annotations.');
         }
     };
 
     const handleSubmitFeedback = async () => {
         try {
-          
-            const { error } = await supabase
+            const { error: submitError } = await supabase
                 .from('progress_form')
-                .update({ status: 'submitted' })
+                .update({ 
+                    status: 'submitted',
+                    self_motivation: feedback.self_motivation,
+                    research_skills: feedback.research_skills,
+                    research_progress: feedback.research_progress,
+                    overall_performance: feedback.overall_performance,
+                    comments: feedback.comments,
+                })
                 .eq('id', formId);
 
-            if (error) {
-                console.error('Error submitting feedback:', error);
-                alert('Failed to submit feedback.');
-            } else {
-                alert('Feedback submitted successfully.');
-                router.push('/dashboard_staff');
+            if (submitError) {
+                throw submitError;
             }
+
+            alert('Feedback submitted successfully.');
+            router.push('/dashboard_staff');
         } catch (error) {
             console.error('Error submitting feedback:', error);
+            alert('Failed to submit feedback.');
         }
     };
 
     if (loading) {
-        return <div className="p-4">Loading...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="p-4 text-lg">Loading...</div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="p-4 text-red-500">{error}</div>
+            </div>
+        );
     }
 
     if (!formDetails) {
-        return <div className="p-4">Form not found.</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="p-4">Form not found.</div>
+            </div>
+        );
     }
 
     return (
-        <div className="p-4">
+        <div className="p-4 max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold mb-4">Provide Feedback</h1>
 
             <div className="bg-white shadow rounded-lg p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-4">Progress Form Details</h2>
-                <p><strong>Term:</strong> {formDetails.term}</p>
-                <p><strong>Submitted At:</strong> {new Date(formDetails.created_at).toLocaleDateString()}</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p><strong>Term:</strong> {formDetails.term}</p>
+                    <p><strong>Start Term:</strong> {formDetails.start_term}</p>
+                    <p><strong>Program:</strong> {formDetails.program}</p>
+                    <p><strong>Degree:</strong> {formDetails.degree}</p>
+                    <p><strong>Year of Study:</strong> {formDetails.year_of_study}</p>
+                    <p><strong>Supervisor:</strong> {formDetails.supervisor_name}</p>
+                    <p><strong>Expected Completion:</strong> {formDetails.expected_completion && new Date(formDetails.expected_completion).toLocaleDateString()}</p>
+                    <p><strong>Submitted At:</strong> {new Date(formDetails.created_at).toLocaleDateString()}</p>
+                </div>
+
+                <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Progress to Date</h3>
+                    <p className="whitespace-pre-wrap">{formDetails.progress_to_date}</p>
+                </div>
+
+                <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Coursework</h3>
+                    <p className="whitespace-pre-wrap">{formDetails.coursework}</p>
+                </div>
+
+                <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Objectives for Next Term</h3>
+                    <p className="whitespace-pre-wrap">{formDetails.objective_next_term}</p>
+                </div>
+
+                <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Student Comments</h3>
+                    <p className="whitespace-pre-wrap">{formDetails.student_comments}</p>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <p><strong>Student Signature:</strong> {formDetails.student_signature}</p>
+                    <p><strong>Signature Date:</strong> {formDetails.signature_date && new Date(formDetails.signature_date).toLocaleDateString()}</p>
+                </div>
             </div>
 
             <div className="bg-white shadow rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-4">Feedback</h2>
-                <form>
+                <form onSubmit={(e) => e.preventDefault()}>
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Self Motivation</label>
                         <select
@@ -192,23 +267,26 @@ export default function FeedbackPage({ params: asyncParams }) {
                             value={feedback.comments}
                             onChange={handleInputChange}
                             className="w-full border rounded p-2"
+                            rows="4"
                             placeholder="Enter additional comments"
                         ></textarea>
                     </div>
-                    <button
-                        type="button"
-                        onClick={handleSaveAnnotations}
-                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                    >
-                        Save Annotations
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleSubmitFeedback}
-                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 ml-2"
-                    >
-                        Submit Feedback
-                    </button>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            onClick={handleSaveAnnotations}
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        >
+                            Save Annotations
+                        </button>
+                        <button
+                            type="button"
+                            onClick={handleSubmitFeedback}
+                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                        >
+                            Submit Feedback
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
