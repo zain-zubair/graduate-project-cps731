@@ -11,9 +11,12 @@ export default function FeedbackPage({ params }) {
     const [formDetails, setFormDetails] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [userRole, setUserRole] = useState(null);
+    const [userId, setUserId] = useState(null);
     const router = useRouter();
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-    // State for form data and tracking changes
+    // State for form data
     const [feedback, setFeedback] = useState({
         self_motivation: '',
         research_skills: '',
@@ -24,8 +27,32 @@ export default function FeedbackPage({ params }) {
         gpd_signature: '',
         gpd_comment: '',
     });
-    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+    // Fetch user role
+    useEffect(() => {
+        async function fetchUserRole() {
+            try {
+                const { data: { user: authUser } } = await supabase.auth.getUser();
+                if (!authUser) return;
+
+                const { data: userData } = await supabase
+                    .from('user')
+                    .select('role, id')
+                    .eq('id', unwrappedParams.id)
+                    .single();
+
+                if (userData) {
+                    setUserRole(userData.role);
+                    setUserId(userData.id);
+                }
+            } catch (error) {
+                console.error('Error fetching user role:', error);
+            }
+        }
+        fetchUserRole();
+    }, [unwrappedParams.id]);
+
+    // Fetch form details
     useEffect(() => {
         async function fetchFormDetails() {
             try {
@@ -88,21 +115,81 @@ export default function FeedbackPage({ params }) {
     const handleSubmitFeedback = async () => {
         try {
             setHasUnsavedChanges(false);
-            const { error: submitError } = await supabase
-                .from('progress_form')
-                .update({ 
-                    status: 'submitted',
-                    ...feedback
-                })
-                .eq('id', formId);
+            let updateData = {};
 
-            if (submitError) throw submitError;
+            // Each role only updates their specific fields
+            switch (userRole) {
+                case 'supervisor':
+                    // Validate required fields for supervisor
+                    if (!feedback.overall_performance) {
+                        alert('Please select an Overall Performance rating before submitting.');
+                        return;
+                    }
+                    if (!feedback.self_motivation || !feedback.research_skills || !feedback.research_progress) {
+                        alert('Please complete all performance ratings before submitting.');
+                        return;
+                    }
+                    if (!feedback.supervisor_signature) {
+                        alert('Please provide your signature before submitting.');
+                        return;
+                    }
+
+                    updateData = {
+                        self_motivation: feedback.self_motivation,
+                        research_skills: feedback.research_skills,
+                        research_progress: feedback.research_progress,
+                        overall_performance: feedback.overall_performance,
+                        comments: feedback.comments || '',
+                        supervisor_signature: feedback.supervisor_signature,
+                        status: 'feedback_from_supervisor', // Changed from 'pending'
+                        supervisor_approved: false,
+                        gpa_approved: false,
+                        gpd_approved: false
+                    };
+                    break;
+                case 'graduate_program_assistant':
+                    if (!feedback.comments) {
+                        alert('Please provide comments before submitting.');
+                        return;
+                    }
+                    updateData = {
+                        comments: feedback.comments,
+                        status: 'feedback_from_gpa'
+                    };
+                    break;
+                case 'graduate_program_director':
+                    if (!feedback.gpd_comment || !feedback.gpd_signature) {
+                        alert('Please provide both comments and signature before submitting.');
+                        return;
+                    }
+                    updateData = {
+                        gpd_comment: feedback.gpd_comment,
+                        gpd_signature: feedback.gpd_signature,
+                        status: 'feedback_from_gpd'
+                    };
+                    break;
+                default:
+                    throw new Error('Invalid user role');
+            }
+
+            console.log('Submitting feedback with data:', updateData);
+
+            const { data, error: submitError } = await supabase
+                .from('progress_form')
+                .update(updateData)
+                .eq('id', formId)
+                .select();
+
+            if (submitError) {
+                console.error('Supabase error:', submitError);
+                throw submitError;
+            }
 
             alert('Feedback submitted successfully.');
             router.push('/dashboard_staff');
         } catch (error) {
             console.error('Error submitting feedback:', error);
-            alert('Failed to submit feedback.');
+            alert(`Failed to submit feedback: ${error.message || 'Please ensure all required fields are filled.'}`);
         }
     };
 
@@ -198,69 +285,73 @@ export default function FeedbackPage({ params }) {
                 <section className="feedback-form">
                     <h2>Provide Feedback</h2>
                     <form onSubmit={(e) => e.preventDefault()}>
-                        <div className="rating-grid">
-                            <div className="form-group">
-                                <label>Self Motivation</label>
-                                <select
-                                    name="self_motivation"
-                                    value={feedback.self_motivation}
-                                    onChange={handleInputChange}
-                                >
-                                    {performanceOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                        {/* Only supervisor can rate performance */}
+                        {userRole === 'supervisor' && (
+                            <div className="rating-grid">
+                                <div className="form-group">
+                                    <label>Self Motivation</label>
+                                    <select
+                                        name="self_motivation"
+                                        value={feedback.self_motivation}
+                                        onChange={handleInputChange}
+                                    >
+                                        {performanceOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            <div className="form-group">
-                                <label>Research Skills</label>
-                                <select
-                                    name="research_skills"
-                                    value={feedback.research_skills}
-                                    onChange={handleInputChange}
-                                >
-                                    {performanceOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                                <div className="form-group">
+                                    <label>Research Skills</label>
+                                    <select
+                                        name="research_skills"
+                                        value={feedback.research_skills}
+                                        onChange={handleInputChange}
+                                    >
+                                        {performanceOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            <div className="form-group">
-                                <label>Research Progress</label>
-                                <select
-                                    name="research_progress"
-                                    value={feedback.research_progress}
-                                    onChange={handleInputChange}
-                                >
-                                    {performanceOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                                <div className="form-group">
+                                    <label>Research Progress</label>
+                                    <select
+                                        name="research_progress"
+                                        value={feedback.research_progress}
+                                        onChange={handleInputChange}
+                                    >
+                                        {performanceOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
 
-                            <div className="form-group">
-                                <label>Overall Performance</label>
-                                <select
-                                    name="overall_performance"
-                                    value={feedback.overall_performance}
-                                    onChange={handleInputChange}
-                                >
-                                    {overallOptions.map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
+                                <div className="form-group">
+                                    <label>Overall Performance</label>
+                                    <select
+                                        name="overall_performance"
+                                        value={feedback.overall_performance}
+                                        onChange={handleInputChange}
+                                    >
+                                        {overallOptions.map(option => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         <div className="comments-section">
+                            {/* Everyone can leave comments */}
                             <div className="form-group">
                                 <label>Comments</label>
                                 <textarea
@@ -272,40 +363,48 @@ export default function FeedbackPage({ params }) {
                                 ></textarea>
                             </div>
 
-                            <div className="form-group">
-                                <label>Graduate Program Director Comment</label>
-                                <textarea
-                                    name="gpd_comment"
-                                    value={feedback.gpd_comment}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter GPD comments"
-                                    rows="4"
-                                ></textarea>
-                            </div>
+                            {/* Only GPD can leave GPD comments */}
+                            {userRole === 'graduate_program_director' && (
+                                <div className="form-group">
+                                    <label>Graduate Program Director Comment</label>
+                                    <textarea
+                                        name="gpd_comment"
+                                        value={feedback.gpd_comment}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter GPD comments"
+                                        rows="4"
+                                    ></textarea>
+                                </div>
+                            )}
                         </div>
 
                         <div className="signature-section">
-                            <div className="form-group">
-                                <label>Supervisor Signature</label>
-                                <input
-                                    type="text"
-                                    name="supervisor_signature"
-                                    value={feedback.supervisor_signature}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter supervisor signature"
-                                />
-                            </div>
+                            {/* Show signature fields based on role */}
+                            {userRole === 'supervisor' && (
+                                <div className="form-group">
+                                    <label>Supervisor Signature</label>
+                                    <input
+                                        type="text"
+                                        name="supervisor_signature"
+                                        value={feedback.supervisor_signature}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter supervisor signature"
+                                    />
+                                </div>
+                            )}
 
-                            <div className="form-group">
-                                <label>Graduate Program Director Signature</label>
-                                <input
-                                    type="text"
-                                    name="gpd_signature"
-                                    value={feedback.gpd_signature}
-                                    onChange={handleInputChange}
-                                    placeholder="Enter GPD signature"
-                                />
-                            </div>
+                            {userRole === 'graduate_program_director' && (
+                                <div className="form-group">
+                                    <label>Graduate Program Director Signature</label>
+                                    <input
+                                        type="text"
+                                        name="gpd_signature"
+                                        value={feedback.gpd_signature}
+                                        onChange={handleInputChange}
+                                        placeholder="Enter GPD signature"
+                                    />
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-actions">

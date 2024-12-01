@@ -3,7 +3,7 @@ import ProgressForm from '@/app/dashboard/[id]/student-form'
 import { supabase } from '@/lib/client'
 
 // Mock Supabase client
-jest.mock('../../../lib/client', () => ({
+jest.mock('../lib/client', () => ({
   supabase: {
     from: jest.fn(() => ({
       insert: jest.fn(),

@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import StaffSelect from '@/app/component/staffSelect';
-import './StaffDashboard.css';
 
 export default function StaffDashboard({ params: asyncParams }) {
     const router = useRouter();
@@ -72,33 +71,42 @@ export default function StaffDashboard({ params: asyncParams }) {
                     console.error('Error fetching staff data:', staffError);
                 } else {
                     setStaffData(staffData);
-                }
 
-                // Fetch forms based on role
-                let formsQuery;
-                if (userData.role === 'supervisor') {
-                    formsQuery = supabase
-                        .from('progress_form')
-                        .select('*')  // Selecting all fields for consistency
-                        .eq('supervisor_id', staffData.id);
-                } else if (userData.role === 'graduate_program_assistant') {
-                    formsQuery = supabase
-                        .from('progress_form')
-                        .select('*')
-                        .eq('status', 'submitted_by_supervisor');
-                } else if (userData.role === 'graduate_program_director') {
-                    formsQuery = supabase
-                        .from('progress_form')
-                        .select('*')
-                        .eq('status', 'approved_by_gpa');
-                }
+                    // Fetch forms based on role
+                    if (userData.role === 'supervisor' && staffData) {
+                        const { data: forms, error: formsError } = await supabase
+                            .from('progress_form')
+                            .select('*')
+                            .eq('supervisor_id', staffData.id);
 
-                if (formsQuery) {
-                    const { data: forms, error: formsError } = await formsQuery;
-                    if (formsError) {
-                        console.error('Error fetching forms:', formsError);
-                    } else {
-                        setAssignedForms(forms || []);
+                        if (formsError) {
+                            console.error('Error fetching forms:', formsError);
+                        } else {
+                            console.log('Fetched forms:', forms);
+                            setAssignedForms(forms || []);
+                        }
+                    } else if (userData.role === 'graduate_program_assistant') {
+                        const { data: forms, error: formsError } = await supabase
+                            .from('progress_form')
+                            .select('*')
+                            .eq('status', 'submitted_by_supervisor');
+
+                        if (formsError) {
+                            console.error('Error fetching forms:', formsError);
+                        } else {
+                            setAssignedForms(forms || []);
+                        }
+                    } else if (userData.role === 'graduate_program_director') {
+                        const { data: forms, error: formsError } = await supabase
+                            .from('progress_form')
+                            .select('*')
+                            .eq('status', 'approved_by_gpa');
+
+                        if (formsError) {
+                            console.error('Error fetching forms:', formsError);
+                        } else {
+                            setAssignedForms(forms || []);
+                        }
                     }
                 }
 
@@ -134,170 +142,234 @@ export default function StaffDashboard({ params: asyncParams }) {
         return roleTitles[role] || role;
     };
 
-    const getStatusBadgeClass = (status) => {
-        const statusClasses = {
-            'in_progress': 'status-badge-progress',
-            'disapproved': 'status-badge-disapproved',
-            'approved': 'status-badge-approved'
-        };
-        return `status-badge ${statusClasses[status] || 'status-badge-default'}`;
-    };
-
-    if (loading) {
-        return <div className="loading-screen">Loading...</div>;
-    }
-
-    if (!user) {
-        return <div className="error-screen">User not found</div>;
-    }
-
     return (
-        <div className="staff-dashboard">
-            <div className="dashboard-container">
-                <header className="dashboard-header">
-                    <div className="header-content">
-                        <h1>{getRoleTitle(user.role)} Dashboard</h1>
-                        <button onClick={handleSignOut} className="sign-out-button">
-                            Sign Out
-                        </button>
-                    </div>
-                </header>
+        <div className="p-4">
+            <div className="max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold">{getRoleTitle(user.role)} Dashboard</h1>
+                    <button 
+                        onClick={handleSignOut}
+                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                        Sign Out
+                    </button>
+                </div>
 
-                <section className="profile-card">
-                    <h2>Profile Information</h2>
-                    <div className="profile-grid">
-                        <div className="profile-item">
-                            <label>Name</label>
-                            <span>{user.name}</span>
+                {/* Profile Section */}
+                <div className="bg-white shadow rounded-lg p-6 mb-6">
+                    <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-gray-600">Name</p>
+                            <p className="font-medium">{user.name}</p>
                         </div>
-                        <div className="profile-item">
-                            <label>Email</label>
-                            <span>{user.email}</span>
+                        <div>
+                            <p className="text-gray-600">Email</p>
+                            <p className="font-medium">{user.email}</p>
                         </div>
-                        <div className="profile-item">
-                            <label>Role</label>
-                            <span>{getRoleTitle(user.role)}</span>
+                        <div>
+                            <p className="text-gray-600">Role</p>
+                            <p className="font-medium">{getRoleTitle(user.role)}</p>
                         </div>
                         {staffData && (
-                            <div className="profile-item">
-                                <label>Department</label>
-                                <span>{staffData.department}</span>
+                            <div>
+                                <p className="text-gray-600">Department</p>
+                                <p className="font-medium">{staffData.department}</p>
                             </div>
                         )}
                     </div>
-                </section>
+                </div>
 
+                {/* Forms Section */}
                 {(user.role === 'supervisor' || user.role === 'graduate_program_assistant' || user.role === 'graduate_program_director') && (
-                    <section className="forms-section">
-                        <h2>
+                    <section className="bg-white shadow rounded-lg p-6">
+                        <h2 className="text-xl font-semibold mb-4">
                             {user.role === 'supervisor' && 'Assigned Progress Forms'}
                             {user.role === 'graduate_program_assistant' && 'Forms Pending GPA Review'}
                             {user.role === 'graduate_program_director' && 'Forms Pending GPD Review'}
                         </h2>
-                        
                         {assignedForms.length > 0 ? (
-                            <ul className="forms-list">
+                            <ul className="space-y-4">
                                 {assignedForms.map((form) => (
-                                    <li key={form.id} className="form-card">
-                                        <div className="form-header">
-                                            <div className="form-info">
-                                                <h3>{form.term}</h3>
-                                                <span className="form-date">
-                                                    Submitted: {new Date(form.created_at).toLocaleDateString()}
-                                                </span>
-                                            </div>
-                                            <span className={getStatusBadgeClass(form.review_status)}>
-                                                {form.review_status || 'Pending'}
-                                            </span>
-                                        </div>
-
-                                        <div className="form-actions">
-                                            <div className="status-select">
-                                                <label>Review Status</label>
-                                                <select
-                                                    value={form.review_status || ''}
-                                                    onChange={async (e) => {
-                                                        try {
-                                                            const { error } = await supabase
-                                                                .from('progress_form')
-                                                                .update({ review_status: e.target.value })
-                                                                .eq('id', form.id);
-                                                            
-                                                            if (error) throw error;
-                                                            window.location.reload();
-                                                        } catch (error) {
-                                                            console.error('Error updating status:', error);
-                                                            alert('Failed to update status');
-                                                        }
-                                                    }}
-                                                >
-                                                    {user.role === 'supervisor' ? (
-                                                        <>
-                                                            <option value="in_progress">In Progress</option>
-                                                            <option value="disapproved">Disapproved</option>
-                                                            <option value="approved">Approved</option>
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <option value="disapproved">Disapproved</option>
-                                                            <option value="approved">Approved</option>
-                                                        </>
-                                                    )}
-                                                </select>
-                                            </div>
-
-                                            <div className="button-group">
+                                    <li key={form.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                                        <div className="flex flex-col gap-4">
+                                            {/* Basic Form Info */}
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p><strong>Term:</strong> {form.term}</p>
+                                                    <p><strong>Submitted At:</strong> {new Date(form.created_at).toLocaleDateString()}</p>
+                                                </div>
                                                 <button
                                                     onClick={() => router.push(`/dashboard_staff/${userId}/feedback/${form.id}`)}
-                                                    className="primary-button"
+                                                    className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                                                 >
                                                     {user.role === 'supervisor' ? 'Provide Feedback' : 'Review Form'}
                                                 </button>
+                                            </div>
 
-                                                {user.role === 'supervisor' && form.review_status === 'approved' && (
+                                            {/* Approval Status Indicators */}
+                                            <div className="border-t pt-3">
+                                                <h3 className="text-sm font-semibold mb-2">Approval Status</h3>
+                                                <div className="grid grid-cols-3 gap-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-3 h-3 rounded-full ${
+                                                            form.supervisor_approved ? 'bg-green-500' : 'bg-gray-300'
+                                                        }`} />
+                                                        <span className="text-sm">Supervisor</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-3 h-3 rounded-full ${
+                                                            form.gpa_approved ? 'bg-green-500' : 'bg-gray-300'
+                                                        }`} />
+                                                        <span className="text-sm">GPA</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className={`w-3 h-3 rounded-full ${
+                                                            form.gpd_approved ? 'bg-green-500' : 'bg-gray-300'
+                                                        }`} />
+                                                        <span className="text-sm">GPD</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="border-t pt-3 flex justify-between items-center">
+                                                {user.role === 'supervisor' && (
                                                     <button
                                                         onClick={async () => {
                                                             try {
                                                                 const { error } = await supabase
                                                                     .from('progress_form')
-                                                                    .update({ status: 'submitted_by_supervisor' })
+                                                                    .update({ 
+                                                                        supervisor_approved: true,
+                                                                        gpa_approved: false,
+                                                                        gpd_approved: false,
+                                                                        status: 'submitted_by_supervisor',
+                                                                        review_status: 'pending'
+                                                                    })
                                                                     .eq('id', form.id);
                                                                 
                                                                 if (error) throw error;
-                                                                alert('Successfully submitted to GPA');
+                                                                alert('Form approved and submitted to GPA');
                                                                 window.location.reload();
                                                             } catch (error) {
                                                                 console.error('Error:', error);
-                                                                alert('Failed to submit to GPA');
+                                                                alert('Failed to approve');
                                                             }
                                                         }}
-                                                        className="success-button"
+                                                        className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
                                                     >
                                                         Submit to GPA
                                                     </button>
                                                 )}
 
-                                                {user.role === 'graduate_program_assistant' && form.review_status === 'approved' && (
-                                                    <button
-                                                        onClick={async () => {
-                                                            try {
-                                                                const { error } = await supabase
-                                                                    .from('progress_form')
-                                                                    .update({ status: 'approved_by_gpa' })
-                                                                    .eq('id', form.id);
-                                                                
-                                                                if (error) throw error;
-                                                                alert('Successfully submitted to GPD');
-                                                                window.location.reload();
-                                                            } catch (error) {
-                                                                console.error('Error:', error);
-                                                                alert('Failed to submit to GPD');
-                                                            }
-                                                        }}
-                                                        className="success-button"
-                                                    >
-                                                        Submit to GPD
-                                                    </button>
+                                                {user.role === 'graduate_program_assistant' && form.supervisor_approved && (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('progress_form')
+                                                                        .update({ 
+                                                                            gpa_approved: true,
+                                                                            status: 'approved_by_gpa'
+                                                                        })
+                                                                        .eq('id', form.id);
+                                                                    
+                                                                    if (error) throw error;
+                                                                    alert('Form approved and submitted to GPD');
+                                                                    window.location.reload();
+                                                                } catch (error) {
+                                                                    console.error('Error:', error);
+                                                                    alert('Failed to approve');
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                                        >
+                                                            Submit to GPD
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('progress_form')
+                                                                        .update({ 
+                                                                            status: 'pending',
+                                                                            review_status: 'feedback_from_gpa',
+                                                                            supervisor_approved: false,
+                                                                            gpa_approved: false
+                                                                        })
+                                                                        .eq('id', form.id);
+                                                                    
+                                                                    if (error) throw error;
+                                                                    alert('Feedback sent to supervisor');
+                                                                    window.location.reload();
+                                                                } catch (error) {
+                                                                    console.error('Error:', error);
+                                                                    alert('Failed to send feedback');
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            Send Back for Review
+                                                        </button>
+                                                    </div>
+                                                )}
+
+                                                {user.role === 'graduate_program_director' && form.gpa_approved && (
+                                                    <div className="flex gap-2">
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('progress_form')
+                                                                        .update({ 
+                                                                            gpd_approved: true,
+                                                                            status: 'approved_by_gpd',
+                                                                            review_status: 'completed'
+                                                                        })
+                                                                        .eq('id', form.id);
+                                                                    
+                                                                    if (error) throw error;
+                                                                    alert('Form approved');
+                                                                    window.location.reload();
+                                                                } catch (error) {
+                                                                    console.error('Error:', error);
+                                                                    alert('Failed to approve');
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+                                                        >
+                                                            Approve
+                                                        </button>
+                                                        <button
+                                                            onClick={async () => {
+                                                                try {
+                                                                    const { error } = await supabase
+                                                                        .from('progress_form')
+                                                                        .update({ 
+                                                                            status: 'pending',
+                                                                            review_status: 'feedback_from_gpd',
+                                                                            supervisor_approved: false,
+                                                                            gpa_approved: false,
+                                                                            gpd_approved: false
+                                                                        })
+                                                                        .eq('id', form.id);
+                                                                    
+                                                                    if (error) throw error;
+                                                                    alert('Feedback sent to supervisor');
+                                                                    window.location.reload();
+                                                                } catch (error) {
+                                                                    console.error('Error:', error);
+                                                                    alert('Failed to send feedback');
+                                                                }
+                                                            }}
+                                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                                                        >
+                                                            Send Back for Review
+                                                        </button>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>
@@ -305,17 +377,16 @@ export default function StaffDashboard({ params: asyncParams }) {
                                 ))}
                             </ul>
                         ) : (
-                            <div className="no-forms">
-                                <p>No forms requiring your attention.</p>
-                            </div>
+                            <p className="text-gray-500">No forms requiring your attention.</p>
                         )}
                     </section>
                 )}
 
+                {/* Staff Select Section */}
                 {user?.role && (
-                    <section className="staff-select-section">
+                    <div className="mt-8">
                         <StaffSelect role={user.role} userId={userId} />
-                    </section>
+                    </div>
                 )}
             </div>
         </div>
