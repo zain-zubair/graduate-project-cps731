@@ -2,33 +2,31 @@
 import { supabase } from '../../../../../lib/client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
 import { use } from 'react';
 
 export default function FeedbackPage({ params }) {
-    // Correctly unwrap params using React.use()
     const unwrappedParams = use(params);
     const { formId } = unwrappedParams;
     const [formDetails, setFormDetails] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const router = useRouter();
+
+    // State for form data and tracking changes
     const [feedback, setFeedback] = useState({
         self_motivation: '',
         research_skills: '',
         research_progress: '',
         overall_performance: '',
         comments: '',
+        supervisor_signature: '',
+        gpd_signature: '',
+        gpd_comment: '',
     });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const router = useRouter();
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
     useEffect(() => {
         async function fetchFormDetails() {
-            if (!formId) {
-                setError('No form ID provided');
-                setLoading(false);
-                return;
-            }
-
             try {
                 const { data: formData, error: formError } = await supabase
                     .from('progress_form')
@@ -48,13 +46,16 @@ export default function FeedbackPage({ params }) {
                 }
 
                 setFormDetails(formData);
-                // Pre-populate feedback state with existing data if available
+                // Pre-populate feedback state with existing data
                 setFeedback({
                     self_motivation: formData.self_motivation || '',
                     research_skills: formData.research_skills || '',
                     research_progress: formData.research_progress || '',
                     overall_performance: formData.overall_performance || '',
                     comments: formData.comments || '',
+                    supervisor_signature: formData.supervisor_signature || '',
+                    gpd_signature: formData.gpd_signature || '',
+                    gpd_comment: formData.gpd_comment || '',
                 });
             } catch (error) {
                 setError('An unexpected error occurred');
@@ -64,7 +65,9 @@ export default function FeedbackPage({ params }) {
             }
         }
 
-        fetchFormDetails();
+        if (formId) {
+            fetchFormDetails();
+        }
     }, [formId]);
 
     const handleInputChange = (e) => {
@@ -73,34 +76,19 @@ export default function FeedbackPage({ params }) {
             ...prev,
             [name]: value,
         }));
+        setHasUnsavedChanges(true);
     };
 
-    const handleSaveAnnotations = async () => {
-        try {
-            const { error: updateError } = await supabase
-                .from('progress_form')
-                .update({
-                    self_motivation: feedback.self_motivation,
-                    research_skills: feedback.research_skills,
-                    research_progress: feedback.research_progress,
-                    overall_performance: feedback.overall_performance,
-                    comments: feedback.comments,
-                })
-                .eq('id', formId);
-
-            if (updateError) {
-                throw updateError;
-            }
-
-            alert('Annotations saved successfully.');
-        } catch (error) {
-            console.error('Error saving annotations:', error);
-            alert('Failed to save annotations.');
-        }
+    const handleSaveChanges = () => {
+        setHasUnsavedChanges(false);
+        alert('Changes saved locally');
     };
 
     const handleSubmitFeedback = async () => {
         try {
+            // Reset unsaved changes flag
+            setHasUnsavedChanges(false);
+
             const { error: submitError } = await supabase
                 .from('progress_form')
                 .update({ 
@@ -110,6 +98,9 @@ export default function FeedbackPage({ params }) {
                     research_progress: feedback.research_progress,
                     overall_performance: feedback.overall_performance,
                     comments: feedback.comments,
+                    supervisor_signature: feedback.supervisor_signature,
+                    gpd_signature: feedback.gpd_signature,
+                    gpd_comment: feedback.gpd_comment,
                 })
                 .eq('id', formId);
 
@@ -185,11 +176,6 @@ export default function FeedbackPage({ params }) {
                     <h3 className="font-semibold mb-2">Student Comments</h3>
                     <p className="whitespace-pre-wrap">{formDetails.student_comments}</p>
                 </div>
-
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p><strong>Student Signature:</strong> {formDetails.student_signature}</p>
-                    <p><strong>Signature Date:</strong> {formDetails.signature_date && new Date(formDetails.signature_date).toLocaleDateString()}</p>
-                </div>
             </div>
 
             <div className="bg-white shadow rounded-lg p-6">
@@ -212,6 +198,7 @@ export default function FeedbackPage({ params }) {
                             <option value="Inadequate">Inadequate</option>
                         </select>
                     </div>
+
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Research Skills</label>
                         <select
@@ -229,6 +216,7 @@ export default function FeedbackPage({ params }) {
                             <option value="Inadequate">Inadequate</option>
                         </select>
                     </div>
+
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Research Progress</label>
                         <select
@@ -246,6 +234,7 @@ export default function FeedbackPage({ params }) {
                             <option value="Inadequate">Inadequate</option>
                         </select>
                     </div>
+
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Overall Performance</label>
                         <select
@@ -260,6 +249,7 @@ export default function FeedbackPage({ params }) {
                             <option value="N/A">Not Applicable</option>
                         </select>
                     </div>
+
                     <div className="mb-4">
                         <label className="block text-gray-700 mb-2">Comments</label>
                         <textarea
@@ -271,13 +261,55 @@ export default function FeedbackPage({ params }) {
                             placeholder="Enter additional comments"
                         ></textarea>
                     </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Supervisor Signature</label>
+                        <input
+                            type="text"
+                            name="supervisor_signature"
+                            value={feedback.supervisor_signature}
+                            onChange={handleInputChange}
+                            className="w-full border rounded p-2"
+                            placeholder="Enter supervisor signature"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Graduate Program Director Signature</label>
+                        <input
+                            type="text"
+                            name="gpd_signature"
+                            value={feedback.gpd_signature}
+                            onChange={handleInputChange}
+                            className="w-full border rounded p-2"
+                            placeholder="Enter GPD signature"
+                        />
+                    </div>
+
+                    <div className="mb-4">
+                        <label className="block text-gray-700 mb-2">Graduate Program Director Comment</label>
+                        <textarea
+                            name="gpd_comment"
+                            value={feedback.gpd_comment}
+                            onChange={handleInputChange}
+                            className="w-full border rounded p-2"
+                            rows="4"
+                            placeholder="Enter GPD comments"
+                        ></textarea>
+                    </div>
+
                     <div className="flex gap-2">
                         <button
                             type="button"
-                            onClick={handleSaveAnnotations}
-                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                            onClick={handleSaveChanges}
+                            className={`px-4 py-2 text-white rounded transition-colors ${
+                                hasUnsavedChanges 
+                                ? 'bg-blue-500 hover:bg-blue-600' 
+                                : 'bg-gray-400 cursor-not-allowed'
+                            }`}
+                            disabled={!hasUnsavedChanges}
                         >
-                            Save Annotations
+                            Save Changes
                         </button>
                         <button
                             type="button"
