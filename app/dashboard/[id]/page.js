@@ -21,9 +21,12 @@ export default function UserDashboard({ params }) {
 
   useEffect(() => {
     if (id) {
-      setUserId(id)
+        console.log("Setting userId from params:", id);
+        setUserId(id);
+    } else {
+        console.log("No id in params:", params);
     }
-  }, [id])
+}, [id]);
 
   useEffect(() => {
     async function fetchUserData() {
@@ -73,7 +76,6 @@ export default function UserDashboard({ params }) {
           console.error('Error fetching student:', studentError)
         }
 
-        // Fetch supervisor data if available
         if (studentData) {
           const { data: supervisorRelation, error: relationError } = await supabase
             .from('student_supervisor_relationship')

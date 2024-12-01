@@ -24,22 +24,29 @@ export default function Dashboard() {
                     return;
                 }
     
-                const { data: dbUser, error: dbError } = await supabase
-                    .from('user')
-                    .select('id')
-                    .eq('email', authUser.email)
-                    .single();
+                // Only proceed with the database query if we have an email
+                if (authUser.email) {
+                    const { data: dbUser, error: dbError } = await supabase
+                        .from('user')
+                        .select('id')
+                        .eq('email', authUser.email)
+                        .maybeSingle();  // Change from single() to maybeSingle()
     
-                console.log("DB User:", dbUser); 
-                console.log("DB Error:", dbError);
+                    console.log("DB User:", dbUser); 
+                    console.log("DB Error:", dbError);
     
-                if (dbUser) {
-                    router.push(`/dashboard/${dbUser.id}`);
-                } else {
-                    setUser(authUser);
+                    if (dbError) {
+                        console.error("DB Error:", dbError);
+                        setUser(authUser);  // Still set the auth user so the form can be shown
+                    } else if (dbUser?.id) {
+                        router.push(`/dashboard/${dbUser.id}`);
+                    } else {
+                        setUser(authUser);  // No user in DB yet, show the form
+                    }
                 }
             } catch (error) {
                 console.error('Error in checkUserAndRedirect:', error);
+                setUser(null);
             }
             setLoading(false);
         }
@@ -51,7 +58,7 @@ export default function Dashboard() {
         } = supabase.auth.onAuthStateChange((event, session) => {
             console.log("Auth state changed:", event, session);
             if (event === 'SIGNED_IN') {
-                checkUserAndRedirect();
+                setTimeout(checkUserAndRedirect, 1000); // Add a small delay to allow for DB propagation
             }
         });
     
@@ -92,7 +99,9 @@ export default function Dashboard() {
             const data = await response.json();
             console.log('Success:', data);
             
-            router.push(`/dashboard/${data.id}`);
+            setTimeout(() => {
+                router.push(`/dashboard/${data.user.id}`);
+            }, 500);
         } catch (error) {
             console.error('Error:', error);
         }
