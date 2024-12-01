@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import React from 'react';
 import StaffSelect from '@/app/component/staffSelect';
+import './StaffDashboard.css';
 
 export default function StaffDashboard({ params: asyncParams }) {
     const router = useRouter();
@@ -133,170 +134,188 @@ export default function StaffDashboard({ params: asyncParams }) {
         return roleTitles[role] || role;
     };
 
-    return (
-        <div className="p-4">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">{getRoleTitle(user.role)} Dashboard</h1>
-                    <button 
-                        onClick={handleSignOut}
-                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                    >
-                        Sign Out
-                    </button>
-                </div>
+    const getStatusBadgeClass = (status) => {
+        const statusClasses = {
+            'in_progress': 'status-badge-progress',
+            'disapproved': 'status-badge-disapproved',
+            'approved': 'status-badge-approved'
+        };
+        return `status-badge ${statusClasses[status] || 'status-badge-default'}`;
+    };
 
-                <div className="bg-white shadow rounded-lg p-6 mb-6">
-                    <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <p className="text-gray-600">Name</p>
-                            <p className="font-medium">{user.name}</p>
+    if (loading) {
+        return <div className="loading-screen">Loading...</div>;
+    }
+
+    if (!user) {
+        return <div className="error-screen">User not found</div>;
+    }
+
+    return (
+        <div className="staff-dashboard">
+            <div className="dashboard-container">
+                <header className="dashboard-header">
+                    <div className="header-content">
+                        <h1>{getRoleTitle(user.role)} Dashboard</h1>
+                        <button onClick={handleSignOut} className="sign-out-button">
+                            Sign Out
+                        </button>
+                    </div>
+                </header>
+
+                <section className="profile-card">
+                    <h2>Profile Information</h2>
+                    <div className="profile-grid">
+                        <div className="profile-item">
+                            <label>Name</label>
+                            <span>{user.name}</span>
                         </div>
-                        <div>
-                            <p className="text-gray-600">Email</p>
-                            <p className="font-medium">{user.email}</p>
+                        <div className="profile-item">
+                            <label>Email</label>
+                            <span>{user.email}</span>
                         </div>
-                        <div>
-                            <p className="text-gray-600">Role</p>
-                            <p className="font-medium">{getRoleTitle(user.role)}</p>
+                        <div className="profile-item">
+                            <label>Role</label>
+                            <span>{getRoleTitle(user.role)}</span>
                         </div>
                         {staffData && (
-                            <div>
-                                <p className="text-gray-600">Department</p>
-                                <p className="font-medium">{staffData.department}</p>
+                            <div className="profile-item">
+                                <label>Department</label>
+                                <span>{staffData.department}</span>
                             </div>
                         )}
                     </div>
-                </div>
+                </section>
 
-                {/* Display Progress Forms for all staff roles */}
                 {(user.role === 'supervisor' || user.role === 'graduate_program_assistant' || user.role === 'graduate_program_director') && (
-                    <section className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4">
+                    <section className="forms-section">
+                        <h2>
                             {user.role === 'supervisor' && 'Assigned Progress Forms'}
                             {user.role === 'graduate_program_assistant' && 'Forms Pending GPA Review'}
                             {user.role === 'graduate_program_director' && 'Forms Pending GPD Review'}
                         </h2>
+                        
                         {assignedForms.length > 0 ? (
-                            <ul className="space-y-4">
+                            <ul className="forms-list">
                                 {assignedForms.map((form) => (
-                                    <li key={form.id} className="border rounded-lg p-4 hover:bg-gray-50">
-                                        <div className="flex justify-between items-start">
-                                            <div className="space-y-3 flex-grow">
-                                                <div>
-                                                    <p><strong>Term:</strong> {form.term}</p>
-                                                    <p><strong>Submitted At:</strong> {new Date(form.created_at).toLocaleDateString()}</p>
-                                                </div>
-                                                
-                                                <div className="flex items-center gap-4">
-                                                    <div className="flex-grow">
-                                                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                                        <select
-                                                            value={form.review_status || ''}
-                                                            onChange={async (e) => {
-                                                                try {
-                                                                    const { error } = await supabase
-                                                                        .from('progress_form')
-                                                                        .update({ review_status: e.target.value })
-                                                                        .eq('id', form.id);
-                                                                    
-                                                                    if (error) throw error;
-                                                                    window.location.reload();
-                                                                } catch (error) {
-                                                                    console.error('Error updating status:', error);
-                                                                    alert('Failed to update status');
-                                                                }
-                                                            }}
-                                                            className="w-full border rounded p-2"
-                                                            disabled={user.role === 'student'}
-                                                        >
-                                                            {user.role === 'supervisor' && (
-                                                                <>
-                                                                    <option value="in_progress">In Progress</option>
-                                                                    <option value="disapproved">Disapproved</option>
-                                                                    <option value="approved">Approved</option>
-                                                                </>
-                                                            )}
-                                                            {(user.role === 'graduate_program_assistant' || user.role === 'graduate_program_director') && (
-                                                                <>
-                                                                    <option value="disapproved">Disapproved</option>
-                                                                    <option value="approved">Approved</option>
-                                                                </>
-                                                            )}
-                                                        </select>
-                                                    </div>
-                                                    
-                                                    <div className="flex gap-2">
-                                                        <button
-                                                            onClick={() => router.push(`/dashboard_staff/${userId}/feedback/${form.id}`)}
-                                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                                                        >
-                                                            {user.role === 'supervisor' ? 'Provide Feedback' : 'Review Form'}
-                                                        </button>
+                                    <li key={form.id} className="form-card">
+                                        <div className="form-header">
+                                            <div className="form-info">
+                                                <h3>{form.term}</h3>
+                                                <span className="form-date">
+                                                    Submitted: {new Date(form.created_at).toLocaleDateString()}
+                                                </span>
+                                            </div>
+                                            <span className={getStatusBadgeClass(form.review_status)}>
+                                                {form.review_status || 'Pending'}
+                                            </span>
+                                        </div>
 
-                                                        {user.role === 'supervisor' && form.review_status === 'approved' && (
-                                                            <button
-                                                                onClick={async () => {
-                                                                    try {
-                                                                        const { error } = await supabase
-                                                                            .from('progress_form')
-                                                                            .update({ status: 'submitted_by_supervisor' })
-                                                                            .eq('id', form.id);
-                                                                        
-                                                                        if (error) throw error;
-                                                                        alert('Successfully submitted to GPA');
-                                                                        window.location.reload();
-                                                                    } catch (error) {
-                                                                        console.error('Error:', error);
-                                                                        alert('Failed to submit to GPA');
-                                                                    }
-                                                                }}
-                                                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                                                            >
-                                                                Submit to GPA
-                                                            </button>
-                                                        )}
+                                        <div className="form-actions">
+                                            <div className="status-select">
+                                                <label>Review Status</label>
+                                                <select
+                                                    value={form.review_status || ''}
+                                                    onChange={async (e) => {
+                                                        try {
+                                                            const { error } = await supabase
+                                                                .from('progress_form')
+                                                                .update({ review_status: e.target.value })
+                                                                .eq('id', form.id);
+                                                            
+                                                            if (error) throw error;
+                                                            window.location.reload();
+                                                        } catch (error) {
+                                                            console.error('Error updating status:', error);
+                                                            alert('Failed to update status');
+                                                        }
+                                                    }}
+                                                >
+                                                    {user.role === 'supervisor' ? (
+                                                        <>
+                                                            <option value="in_progress">In Progress</option>
+                                                            <option value="disapproved">Disapproved</option>
+                                                            <option value="approved">Approved</option>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <option value="disapproved">Disapproved</option>
+                                                            <option value="approved">Approved</option>
+                                                        </>
+                                                    )}
+                                                </select>
+                                            </div>
 
-                                                        {user.role === 'graduate_program_assistant' && form.review_status === 'approved' && (
-                                                            <button
-                                                                onClick={async () => {
-                                                                    try {
-                                                                        const { error } = await supabase
-                                                                            .from('progress_form')
-                                                                            .update({ status: 'approved_by_gpa' })
-                                                                            .eq('id', form.id);
-                                                                        
-                                                                        if (error) throw error;
-                                                                        alert('Successfully submitted to GPD');
-                                                                        window.location.reload();
-                                                                    } catch (error) {
-                                                                        console.error('Error:', error);
-                                                                        alert('Failed to submit to GPD');
-                                                                    }
-                                                                }}
-                                                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                                                            >
-                                                                Submit to GPD
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
+                                            <div className="button-group">
+                                                <button
+                                                    onClick={() => router.push(`/dashboard_staff/${userId}/feedback/${form.id}`)}
+                                                    className="primary-button"
+                                                >
+                                                    {user.role === 'supervisor' ? 'Provide Feedback' : 'Review Form'}
+                                                </button>
+
+                                                {user.role === 'supervisor' && form.review_status === 'approved' && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from('progress_form')
+                                                                    .update({ status: 'submitted_by_supervisor' })
+                                                                    .eq('id', form.id);
+                                                                
+                                                                if (error) throw error;
+                                                                alert('Successfully submitted to GPA');
+                                                                window.location.reload();
+                                                            } catch (error) {
+                                                                console.error('Error:', error);
+                                                                alert('Failed to submit to GPA');
+                                                            }
+                                                        }}
+                                                        className="success-button"
+                                                    >
+                                                        Submit to GPA
+                                                    </button>
+                                                )}
+
+                                                {user.role === 'graduate_program_assistant' && form.review_status === 'approved' && (
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                const { error } = await supabase
+                                                                    .from('progress_form')
+                                                                    .update({ status: 'approved_by_gpa' })
+                                                                    .eq('id', form.id);
+                                                                
+                                                                if (error) throw error;
+                                                                alert('Successfully submitted to GPD');
+                                                                window.location.reload();
+                                                            } catch (error) {
+                                                                console.error('Error:', error);
+                                                                alert('Failed to submit to GPD');
+                                                            }
+                                                        }}
+                                                        className="success-button"
+                                                    >
+                                                        Submit to GPD
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </li>
                                 ))}
                             </ul>
                         ) : (
-                            <p className="text-gray-500">No forms requiring your attention.</p>
+                            <div className="no-forms">
+                                <p>No forms requiring your attention.</p>
+                            </div>
                         )}
                     </section>
                 )}
 
                 {user?.role && (
-                    <div className="mt-8">
+                    <section className="staff-select-section">
                         <StaffSelect role={user.role} userId={userId} />
-                    </div>
+                    </section>
                 )}
             </div>
         </div>

@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import React from 'react'
 import ProgressForm from './student-form'
+import './UserDashboard.css'
 
 export default function UserDashboard({ params }) {
   const router = useRouter()
@@ -118,123 +119,116 @@ export default function UserDashboard({ params }) {
   }
 
   if (loading) {
-    return <div className="p-4">Loading...</div>
+    return <div className="loading-container">Loading...</div>
   }
 
   if (!user) {
-    return <div className="p-4">User not found</div>
+    return <div className="error-message">User not found</div>
   }
 
   return (
-    <main className="p-4">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Student Dashboard</h1>
-          <button
-            onClick={handleSignOut}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-          >
+    <main className="dashboard">
+      <div className="dashboard-container">
+        <div className="header">
+          <h1 className="page-title">Student Dashboard</h1>
+          <button onClick={handleSignOut} className="sign-out-btn">
             Sign Out
           </button>
         </div>
-        <div className="bg-white shadow rounded-lg p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Profile Information</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-gray-600">Name</p>
-              <p className="font-medium">{user.name}</p>
+
+        <div className="card profile-card">
+          <h2 className="card-title">Profile Information</h2>
+          <div className="info-grid">
+            <div className="info-item">
+              <p className="info-label">Name</p>
+              <p className="info-value">{user.name}</p>
             </div>
-            <div>
-              <p className="text-gray-600">Email</p>
-              <p className="font-medium">{user.email}</p>
+            <div className="info-item">
+              <p className="info-label">Email</p>
+              <p className="info-value">{user.email}</p>
             </div>
           </div>
         </div>
+
         {studentData && (
-          <div className="space-y-6">
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Academic Information
-              </h2>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-gray-600">Program</p>
-                  <p className="font-medium">{studentData.program}</p>
+          <div className="academic-section">
+            <div className="card">
+              <h2 className="card-title">Academic Information</h2>
+              <div className="info-grid">
+                <div className="info-item">
+                  <p className="info-label">Program</p>
+                  <p className="info-value">{studentData.program}</p>
                 </div>
-                <div>
-                  <p className="text-gray-600">Degree</p>
-                  <p className="font-medium">{studentData.degree}</p>
+                <div className="info-item">
+                  <p className="info-label">Degree</p>
+                  <p className="info-value">{studentData.degree}</p>
                 </div>
-                <div>
-                  <p className="text-gray-600">Year of Study</p>
-                  <p className="font-medium">{studentData.year_of_study}</p>
+                <div className="info-item">
+                  <p className="info-label">Year of Study</p>
+                  <p className="info-value">{studentData.year_of_study}</p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-4">
-                Supervisor Information
-              </h2>
+            <div className="card supervisor-card">
+              <h2 className="card-title">Supervisor Information</h2>
               {supervisorInfo ? (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-gray-600">Supervisor Name</p>
-                    <p className="font-medium">{supervisorInfo.user.name}</p>
+                <div className="info-grid">
+                  <div className="info-item">
+                    <p className="info-label">Supervisor Name</p>
+                    <p className="info-value">{supervisorInfo.user.name}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-600">Supervisor Email</p>
-                    <p className="font-medium">{supervisorInfo.user.email}</p>
+                  <div className="info-item">
+                    <p className="info-label">Supervisor Email</p>
+                    <p className="info-value">{supervisorInfo.user.email}</p>
                   </div>
-                  <div>
-                    <p className="text-gray-600">Department</p>
-                    <p className="font-medium">{supervisorInfo.department}</p>
+                  <div className="info-item">
+                    <p className="info-label">Department</p>
+                    <p className="info-value">{supervisorInfo.department}</p>
                   </div>
                 </div>
               ) : (
-                <p className="text-gray-500 italic">
-                  No supervisor assigned yet.
-                </p>
+                <p className="no-supervisor">No supervisor assigned yet.</p>
               )}
             </div>
           </div>
         )}
+
+        <section className="submissions-section">
+          <h2 className="section-title">Graduate Progress Form</h2>
+
+          <div className="card">
+            <h3 className="subsection-title">Previous Submissions</h3>
+            {submissions?.length > 0 ? (
+              <ul className="submissions-list">
+                {submissions.map((s, index) => (
+                  <li key={index} className="submission-item">
+                    <div className="submission-info">
+                      <p className="submission-term">Progress report for term: {s.term}</p>
+                      <p className="submission-date">
+                        Submitted at {new Date(s.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => router.push(`/dashboard/${userId}/feedback/${s.id}`)}
+                      className="view-feedback-btn"
+                    >
+                      View Feedback
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="no-submissions">No progress forms previously submitted.</div>
+            )}
+          </div>
+
+          <div className="new-submission-section">
+            <h3 className="subsection-title">Create New Submission</h3>
+            <ProgressForm studentId={userId} supervisorId={supervisorInfo?.id} />
+          </div>
+        </section>
       </div>
-
-      <section>
-        <h2>Graduate Progress Form</h2>
-
-        <div>
-          <h3>Previous Submissions</h3>
-          {submissions.length > 0 ? (
-            <ul>
-              {submissions.map((s, index) => (
-                <li key={index}>
-                  <p>Progress report for term: {s.term}</p>
-                  <p>
-                    Submitted at {new Date(s.created_at).toLocaleDateString()}
-                  </p>
-                  <button
-                    onClick={() =>
-                      router.push(`/dashboard/${userId}/feedback/${s.id}`)
-                    }
-                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    View Feedback
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div>No progress forms previously submitted.</div>
-          )}
-        </div>
-
-        <div>
-          <h3>Create New Submission</h3>
-          <ProgressForm studentId={userId} supervisorId={supervisorInfo?.id} />
-        </div>
-      </section>
     </main>
   )
 }

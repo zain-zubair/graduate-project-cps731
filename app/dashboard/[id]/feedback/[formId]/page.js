@@ -3,11 +3,12 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../../../lib/client';
 import React from 'react';
+import './FeedbackPage.css';
 
 export default function FeedbackPage({ params: asyncParams }) {
   const router = useRouter();
-  const params = React.use(asyncParams); 
-  const formId = params?.formId; 
+  const params = React.use(asyncParams);
+  const formId = params?.formId;
   const [formDetails, setFormDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,8 +18,7 @@ export default function FeedbackPage({ params: asyncParams }) {
       try {
         const { data, error } = await supabase
           .from('progress_form')
-          .select(
-            `
+          .select(`
             term,
             created_at,
             program,
@@ -33,8 +33,7 @@ export default function FeedbackPage({ params: asyncParams }) {
             research_progress,
             overall_performance,
             comments
-            `
-          )
+          `)
           .eq('id', formId)
           .single();
 
@@ -58,48 +57,109 @@ export default function FeedbackPage({ params: asyncParams }) {
   }, [formId]);
 
   if (loading) {
-    return <div className="p-4">Loading...</div>;
+    return <div className="loading-state">Loading...</div>;
   }
 
   if (error || !formDetails) {
-    return <div className="p-4">{error || 'No data found'}</div>;
+    return <div className="error-state">{error || 'No data found'}</div>;
   }
 
+  const getRatingColor = (rating) => {
+    const ratingNum = parseInt(rating);
+    if (ratingNum >= 4) return 'excellent';
+    if (ratingNum >= 3) return 'good';
+    if (ratingNum >= 2) return 'fair';
+    return 'needs-improvement';
+  };
+
   return (
-    <main className="p-4">
-      <div className="max-w-4xl mx-auto">
-        <nav className="mb-4">
+    <main className="feedback-page">
+      <div className="container">
+        <nav className="navigation">
           <button
             onClick={() => router.push('/dashboard')}
-            className="text-blue-500 hover:underline"
+            className="back-button"
           >
             ← Back to Dashboard
           </button>
         </nav>
 
-    
-        <section className="mb-6 bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Progress Form Details</h2>
-          <p><strong>Term:</strong> {formDetails.term}</p>
-          <p><strong>Program:</strong> {formDetails.program}</p>
-          <p><strong>Degree:</strong> {formDetails.degree}</p>
-          <p><strong>Year of Study:</strong> {formDetails.year_of_study}</p>
-          <p><strong>Supervisor:</strong> {formDetails.supervisor_name}</p>
-          <p><strong>Submitted At:</strong> {new Date(formDetails.created_at).toLocaleDateString()}</p>
-          <p><strong>Progress to Date:</strong> {formDetails.progress_to_date}</p>
-          <p><strong>Coursework:</strong> {formDetails.coursework}</p>
-          <p><strong>Objective for Next Term:</strong> {formDetails.objective_next_term}</p>
-        </section>
+        <div className="content-wrapper">
+          <section className="form-details">
+            <div className="header-section">
+              <h2>Progress Form Details</h2>
+              <span className="submission-date">
+                Submitted on {new Date(formDetails.created_at).toLocaleDateString()}
+              </span>
+            </div>
 
-      
-        <section className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Feedback</h2>
-          <p><strong>Self Motivation:</strong> {formDetails.self_motivation}</p>
-          <p><strong>Research Skills:</strong> {formDetails.research_skills}</p>
-          <p><strong>Research Progress:</strong> {formDetails.research_progress}</p>
-          <p><strong>Overall Performance:</strong> {formDetails.overall_performance}</p>
-          <p><strong>Comments:</strong> {formDetails.comments}</p>
-        </section>
+            <div className="info-grid">
+              <div className="info-item">
+                <label>Term</label>
+                <span>{formDetails.term}</span>
+              </div>
+              <div className="info-item">
+                <label>Program</label>
+                <span>{formDetails.program}</span>
+              </div>
+              <div className="info-item">
+                <label>Degree</label>
+                <span>{formDetails.degree}</span>
+              </div>
+              <div className="info-item">
+                <label>Year of Study</label>
+                <span>{formDetails.year_of_study}</span>
+              </div>
+              <div className="info-item">
+                <label>Supervisor</label>
+                <span>{formDetails.supervisor_name}</span>
+              </div>
+            </div>
+
+            <div className="text-sections">
+              <div className="text-section">
+                <h3>Progress to Date</h3>
+                <p>{formDetails.progress_to_date}</p>
+              </div>
+              <div className="text-section">
+                <h3>Coursework</h3>
+                <p>{formDetails.coursework}</p>
+              </div>
+              <div className="text-section">
+                <h3>Objectives for Next Term</h3>
+                <p>{formDetails.objective_next_term}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className="feedback-section">
+            <h2>Supervisor Feedback</h2>
+            
+            <div className="ratings-grid">
+              <div className={`rating-item ${getRatingColor(formDetails.self_motivation)}`}>
+                <label>Self Motivation</label>
+                <span className="rating">{formDetails.self_motivation}/5</span>
+              </div>
+              <div className={`rating-item ${getRatingColor(formDetails.research_skills)}`}>
+                <label>Research Skills</label>
+                <span className="rating">{formDetails.research_skills}/5</span>
+              </div>
+              <div className={`rating-item ${getRatingColor(formDetails.research_progress)}`}>
+                <label>Research Progress</label>
+                <span className="rating">{formDetails.research_progress}/5</span>
+              </div>
+              <div className={`rating-item ${getRatingColor(formDetails.overall_performance)}`}>
+                <label>Overall Performance</label>
+                <span className="rating">{formDetails.overall_performance}/5</span>
+              </div>
+            </div>
+
+            <div className="comments-section">
+              <h3>Additional Comments</h3>
+              <p>{formDetails.comments}</p>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );
