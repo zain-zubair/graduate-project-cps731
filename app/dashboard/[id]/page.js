@@ -90,7 +90,7 @@ export default function UserDashboard({ params }) {
               )
             `)
             .eq('student_id', studentData.user_id)  // Note: Check if this should be studentData.user_id or studentData.id
-            .maybeSingle()  // Use maybeSingle() instead of single()
+            .maybeSingle() 
         
           if (relationError) {
             console.error('Error fetching supervisor relation:', relationError)
