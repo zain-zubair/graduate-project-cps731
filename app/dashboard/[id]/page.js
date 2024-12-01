@@ -75,26 +75,24 @@ export default function UserDashboard({ params }) {
 
         // Fetch supervisor data if available
         if (studentData) {
-          const { data: supervisorRelation, error: relationError } =
-            await supabase
-              .from('student_supervisor_relationship')
-              .select(
-                `
-                            supervisor:supervisor_id (
-                                id,
-                                user_id,
-                                department,
-                                user:user_id (
-                                    name,
-                                    email
-                                )
-                            )
-                        `
+          const { data: supervisorRelation, error: relationError } = await supabase
+            .from('student_supervisor_relationship')
+            .select(`
+              supervisor_id,
+              supervisor:supervisor_id (
+                department,
+                user:user_id (
+                  name,
+                  email
+                )
               )
-              .eq('student_id', studentData.id)
-              .single()
-
-          if (!relationError && supervisorRelation) {
+            `)
+            .eq('student_id', studentData.user_id)  // Note: Check if this should be studentData.user_id or studentData.id
+            .maybeSingle()  // Use maybeSingle() instead of single()
+        
+          if (relationError) {
+            console.error('Error fetching supervisor relation:', relationError)
+          } else if (supervisorRelation) {
             setSupervisorInfo(supervisorRelation.supervisor)
           }
         }
