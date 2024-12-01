@@ -52,7 +52,11 @@ export default function AuthForm({ role }) {
 
   return (
     <div>
-      <h1>{role} Login</h1>
+      {role === 'student' ? (
+        <h1>Student Login</h1>
+      ) : (
+        <h1>Staff Login</h1>
+      )}
       <input
         type="email"
         placeholder="Email"
