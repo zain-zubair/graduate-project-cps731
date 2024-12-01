@@ -21,12 +21,9 @@ export default function UserDashboard({ params }) {
 
   useEffect(() => {
     if (id) {
-        console.log("Setting userId from params:", id);
-        setUserId(id);
-    } else {
-        console.log("No id in params:", params);
+      setUserId(id)
     }
-}, [id]);
+  }, [id])
 
   useEffect(() => {
     async function fetchUserData() {
@@ -76,25 +73,28 @@ export default function UserDashboard({ params }) {
           console.error('Error fetching student:', studentError)
         }
 
+        // Fetch supervisor data if available
         if (studentData) {
-          const { data: supervisorRelation, error: relationError } = await supabase
-            .from('student_supervisor_relationship')
-            .select(`
-              supervisor_id,
-              supervisor:supervisor_id (
-                department,
-                user:user_id (
-                  name,
-                  email
-                )
+          const { data: supervisorRelation, error: relationError } =
+            await supabase
+              .from('student_supervisor_relationship')
+              .select(
+                `
+                            supervisor:supervisor_id (
+                                id,
+                                user_id,
+                                department,
+                                user:user_id (
+                                    name,
+                                    email
+                                )
+                            )
+                        `
               )
-            `)
-            .eq('student_id', studentData.user_id)  // Note: Check if this should be studentData.user_id or studentData.id
-            .maybeSingle() 
-        
-          if (relationError) {
-            console.error('Error fetching supervisor relation:', relationError)
-          } else if (supervisorRelation) {
+              .eq('student_id', studentData.id)
+              .single()
+
+          if (!relationError && supervisorRelation) {
             setSupervisorInfo(supervisorRelation.supervisor)
           }
         }
