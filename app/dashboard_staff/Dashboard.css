@@ -1,0 +1,188 @@
+/* Main Layout */
+.dashboard-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f6f9fc 0%, #f1f5f9 100%);
+    padding: 2rem 1.5rem;
+}
+
+.dashboard-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header */
+.dashboard-header {
+    background: white;
+    padding: 1.75rem 2rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dashboard-header h1 {
+    color: #1e293b;
+    font-size: 1.875rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+
+/* Sign Out Button */
+.sign-out-button {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(to right, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.sign-out-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+}
+
+/* Profile Form Section */
+.profile-form {
+    background: white;
+    padding: 1rem; /* Reduced padding */
+    border-radius: 12px;
+    box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.1), 0 1px 3px -1px rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem; /* Reduced margin */
+}
+
+.space-y-4 > * + * {
+    margin-top: 1rem;
+}
+
+.space-y-2 > * + * {
+    margin-top: 0.5rem;
+}
+
+/* Form Elements */
+input[type="text"],
+select {
+    width: 100%;
+    padding: 0.5rem 0.75rem; /* Reduced padding */
+    border: 1px solid #d1d5db;
+    border-radius: 8px; /* Reduced border radius */
+    background-color: #f9fafb;
+    color: #1e293b;
+    font-size: 0.875rem; /* Smaller font size */
+    transition: all 0.2s ease;
+}
+
+input[type="text"],
+select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background-color: #f8fafc;
+    color: #1e293b;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+}
+
+input[type="text"]:focus,
+select:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background-color: white;
+}
+
+select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b5563' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+}
+
+/* Submit Button */
+.submit-button {
+    width: 100%;
+    padding: 0.75rem; /* Reduced padding */
+    background: linear-gradient(to right, #3b82f6, #2563eb);
+    color: white;
+    border: none;
+    border-radius: 8px; /* Reduced border radius */
+    font-weight: 500; /* Reduced font weight */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.submit-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+}
+
+/* Loading and Error States */
+.loading-state,
+.error-state {
+    text-align: center;
+    padding: 3rem 2rem;
+    border-radius: 16px;
+    background: white;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.loading-state {
+    color: #64748b;
+}
+
+.error-state {
+    color: #dc2626;
+}
+
+/* Welcome Message */
+.welcome-message {
+    color: #475569;
+    font-size: 1.1rem;
+    margin: 1rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .profile-form {
+        padding: 1.5rem;
+    }
+    
+    .sign-out-button,
+    .submit-button {
+        width: 100%;
+    }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+    .sign-out-button,
+    .submit-button {
+        transform: none !important;
+        transition: none !important;
+    }
+}

@@ -2,6 +2,7 @@
 import { supabase } from '../../lib/client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import './Dashboard.css';
 
 export default function Dashboard() {
     const router = useRouter();
@@ -12,7 +13,6 @@ export default function Dashboard() {
     useEffect(() => {
         async function checkUserAndRedirect() {
             try {
-                // Get authenticated user
                 const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
                 
                 console.log("Auth User:", authUser);
@@ -24,7 +24,6 @@ export default function Dashboard() {
                     return;
                 }
     
-                // Check if user exists in your users table
                 const { data: dbUser, error: dbError } = await supabase
                     .from('user')
                     .select('id')
@@ -35,10 +34,8 @@ export default function Dashboard() {
                 console.log("DB Error:", dbError);
     
                 if (dbUser) {
-                    // User exists in the database, redirect to their dashboard
                     router.push(`/dashboard/${dbUser.id}`);
                 } else {
-                    // User is authenticated but hasn't created an account yet
                     setUser(authUser);
                 }
             } catch (error) {
@@ -47,10 +44,8 @@ export default function Dashboard() {
             setLoading(false);
         }
     
-        // Add immediate check and periodic refresh
         checkUserAndRedirect();
         
-        // Set up an auth state listener
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
@@ -97,73 +92,80 @@ export default function Dashboard() {
             const data = await response.json();
             console.log('Success:', data);
             
-            // After successful account creation, redirect to the user's dashboard
             router.push(`/dashboard/${data.id}`);
         } catch (error) {
             console.error('Error:', error);
         }
     }
 
-    if (loading) return <div className="p-4">Loading...</div>;
+    if (loading) return <div className="loading">Loading...</div>;
 
     if (!user) {
         return (
-            <div className="p-4">
-                <h1 className="text-2xl mb-4">Not Authorized</h1>
-                <p>Please sign in to view the dashboard</p>
+            <div className="container">
+                <h1 className="error-title">Not Authorized</h1>
+                <p className="error-message">Please sign in to view the dashboard</p>
             </div>
         );
     }
 
     return (
-        <div className="p-4">
-            <h1 className="text-2xl mb-4">Complete Your Profile</h1>
-            <p>Welcome {user.email}</p>
-            <button 
-                onClick={handleSignOut}
-                className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-                Sign Out
-            </button>
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium">Please enter your information:</label>
-                    <input 
-                        name="name" 
-                        placeholder="Name" 
-                        value={formData.name} 
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded"
-                    />
-                    <input 
-                        name="program" 
-                        placeholder="Program" 
-                        value={formData.program} 
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded"
-                    />
-                    <input 
-                        name="degree" 
-                        placeholder="Degree" 
-                        value={formData.degree} 
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded"
-                    />
-                    <input 
-                        name="year" 
-                        placeholder="Year of Study" 
-                        value={formData.year} 
-                        onChange={handleInputChange}
-                        className="w-full p-2 border rounded"
-                    />
-                </div>
+        <div className="container">
+            <div className="card">
+                <h1 className="title">Complete Your Profile</h1>
+                <p className="welcome-text">Welcome {user.email}</p>
+                
                 <button 
-                    type="submit"
-                    className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    onClick={handleSignOut}
+                    className="sign-out-button"
                 >
-                    Create Account
+                    Sign Out
                 </button>
-            </form>
+
+                <form onSubmit={handleSubmit} className="form">
+                    <div className="form-group">
+                        <label className="label">Please enter your information:</label>
+                        <input 
+                            name="name" 
+                            placeholder="Name" 
+                            value={formData.name} 
+                            onChange={handleInputChange}
+                            className="input"
+                            required
+                        />
+                        <input 
+                            name="program" 
+                            placeholder="Program" 
+                            value={formData.program} 
+                            onChange={handleInputChange}
+                            className="input"
+                            required
+                        />
+                        <input 
+                            name="degree" 
+                            placeholder="Degree" 
+                            value={formData.degree} 
+                            onChange={handleInputChange}
+                            className="input"
+                            required
+                        />
+                        <input 
+                            name="year" 
+                            placeholder="Year of Study" 
+                            value={formData.year} 
+                            onChange={handleInputChange}
+                            className="input"
+                            required
+                        />
+                    </div>
+                    <button 
+                        type="submit"
+                        className="submit-button"
+                    >
+                        Create Account
+                    </button>
+                </form>
+            </div>
         </div>
     );
 }
