@@ -139,8 +139,11 @@ export default function StaffDashboard({ params: asyncParams }) {
             const { error } = await supabase
                 .from('progress_form')
                 .update({ 
-                    gpa_approved: true,
-                    status: 'approved_by_gpa'
+                    supervisor_approved: true,  // Keep supervisor's approval
+                    gpa_approved: true,        // Set GPA's approval
+                    gpd_approved: false,       // Reset GPD's approval
+                    status: 'approved_by_gpa',
+                    review_status: 'pending'   // Reset review status
                 })
                 .eq('id', formId);
             
