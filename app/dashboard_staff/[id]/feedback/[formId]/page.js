@@ -3,6 +3,7 @@ import { supabase } from '../../../../../lib/client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { use } from 'react';
+import './FeedbackPage.css';
 
 export default function FeedbackPage({ params }) {
     const unwrappedParams = use(params);
@@ -86,27 +87,16 @@ export default function FeedbackPage({ params }) {
 
     const handleSubmitFeedback = async () => {
         try {
-            // Reset unsaved changes flag
             setHasUnsavedChanges(false);
-
             const { error: submitError } = await supabase
                 .from('progress_form')
                 .update({ 
                     status: 'submitted',
-                    self_motivation: feedback.self_motivation,
-                    research_skills: feedback.research_skills,
-                    research_progress: feedback.research_progress,
-                    overall_performance: feedback.overall_performance,
-                    comments: feedback.comments,
-                    supervisor_signature: feedback.supervisor_signature,
-                    gpd_signature: feedback.gpd_signature,
-                    gpd_comment: feedback.gpd_comment,
+                    ...feedback
                 })
                 .eq('id', formId);
 
-            if (submitError) {
-                throw submitError;
-            }
+            if (submitError) throw submitError;
 
             alert('Feedback submitted successfully.');
             router.push('/dashboard_staff');
@@ -116,210 +106,227 @@ export default function FeedbackPage({ params }) {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="p-4 text-lg">Loading...</div>
-            </div>
-        );
-    }
+    if (loading) return <div className="loading-state">Loading...</div>;
+    if (error) return <div className="error-state">{error}</div>;
+    if (!formDetails) return <div className="error-state">Form not found.</div>;
 
-    if (error) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="p-4 text-red-500">{error}</div>
-            </div>
-        );
-    }
+    const performanceOptions = [
+        { value: '', label: 'Select rating' },
+        { value: 'Exceptional', label: 'Exceptional' },
+        { value: 'Good', label: 'Good' },
+        { value: 'Fair', label: 'Fair' },
+        { value: 'Needs Improvement', label: 'Needs Improvement' },
+        { value: 'Unsatisfactory', label: 'Unsatisfactory' },
+        { value: 'Inadequate', label: 'Inadequate' }
+    ];
 
-    if (!formDetails) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="p-4">Form not found.</div>
-            </div>
-        );
-    }
+    const overallOptions = [
+        { value: '', label: 'Select status' },
+        { value: 'INP', label: 'In Progress' },
+        { value: 'UNS', label: 'Unsatisfactory' },
+        { value: 'N/A', label: 'Not Applicable' }
+    ];
 
     return (
-        <div className="p-4 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-4">Provide Feedback</h1>
+        <div className="feedback-page">
+            <div className="feedback-container">
+                <nav className="navigation">
+                    <button onClick={() => router.back()} className="back-button">
+                        ← Back
+                    </button>
+                    <h1>Provide Feedback</h1>
+                </nav>
 
-            <div className="bg-white shadow rounded-lg p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-4">Progress Form Details</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <p><strong>Term:</strong> {formDetails.term}</p>
-                    <p><strong>Start Term:</strong> {formDetails.start_term}</p>
-                    <p><strong>Program:</strong> {formDetails.program}</p>
-                    <p><strong>Degree:</strong> {formDetails.degree}</p>
-                    <p><strong>Year of Study:</strong> {formDetails.year_of_study}</p>
-                    <p><strong>Supervisor:</strong> {formDetails.supervisor_name}</p>
-                    <p><strong>Expected Completion:</strong> {formDetails.expected_completion && new Date(formDetails.expected_completion).toLocaleDateString()}</p>
-                    <p><strong>Submitted At:</strong> {new Date(formDetails.created_at).toLocaleDateString()}</p>
-                </div>
-
-                <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Progress to Date</h3>
-                    <p className="whitespace-pre-wrap">{formDetails.progress_to_date}</p>
-                </div>
-
-                <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Coursework</h3>
-                    <p className="whitespace-pre-wrap">{formDetails.coursework}</p>
-                </div>
-
-                <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Objectives for Next Term</h3>
-                    <p className="whitespace-pre-wrap">{formDetails.objective_next_term}</p>
-                </div>
-
-                <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Student Comments</h3>
-                    <p className="whitespace-pre-wrap">{formDetails.student_comments}</p>
-                </div>
-            </div>
-
-            <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-xl font-semibold mb-4">Feedback</h2>
-                <form onSubmit={(e) => e.preventDefault()}>
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Self Motivation</label>
-                        <select
-                            name="self_motivation"
-                            value={feedback.self_motivation}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                        >
-                            <option value="">Select</option>
-                            <option value="Exceptional">Exceptional</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Needs Improvement">Needs Improvement</option>
-                            <option value="Unsatisfactory">Unsatisfactory</option>
-                            <option value="Inadequate">Inadequate</option>
-                        </select>
+                <section className="form-details">
+                    <h2>Progress Form Details</h2>
+                    
+                    <div className="info-grid">
+                        <div className="info-item">
+                            <label>Term</label>
+                            <span>{formDetails.term}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Start Term</label>
+                            <span>{formDetails.start_term}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Program</label>
+                            <span>{formDetails.program}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Degree</label>
+                            <span>{formDetails.degree}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Year of Study</label>
+                            <span>{formDetails.year_of_study}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Supervisor</label>
+                            <span>{formDetails.supervisor_name}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Expected Completion</label>
+                            <span>{formDetails.expected_completion && new Date(formDetails.expected_completion).toLocaleDateString()}</span>
+                        </div>
+                        <div className="info-item">
+                            <label>Submitted At</label>
+                            <span>{new Date(formDetails.created_at).toLocaleDateString()}</span>
+                        </div>
                     </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Research Skills</label>
-                        <select
-                            name="research_skills"
-                            value={feedback.research_skills}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                        >
-                            <option value="">Select</option>
-                            <option value="Exceptional">Exceptional</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Needs Improvement">Needs Improvement</option>
-                            <option value="Unsatisfactory">Unsatisfactory</option>
-                            <option value="Inadequate">Inadequate</option>
-                        </select>
+                    <div className="text-sections">
+                        <div className="text-section">
+                            <h3>Progress to Date</h3>
+                            <p>{formDetails.progress_to_date}</p>
+                        </div>
+                        <div className="text-section">
+                            <h3>Coursework</h3>
+                            <p>{formDetails.coursework}</p>
+                        </div>
+                        <div className="text-section">
+                            <h3>Objectives for Next Term</h3>
+                            <p>{formDetails.objective_next_term}</p>
+                        </div>
+                        <div className="text-section">
+                            <h3>Student Comments</h3>
+                            <p>{formDetails.student_comments}</p>
+                        </div>
                     </div>
+                </section>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Research Progress</label>
-                        <select
-                            name="research_progress"
-                            value={feedback.research_progress}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                        >
-                            <option value="">Select</option>
-                            <option value="Exceptional">Exceptional</option>
-                            <option value="Good">Good</option>
-                            <option value="Fair">Fair</option>
-                            <option value="Needs Improvement">Needs Improvement</option>
-                            <option value="Unsatisfactory">Unsatisfactory</option>
-                            <option value="Inadequate">Inadequate</option>
-                        </select>
-                    </div>
+                <section className="feedback-form">
+                    <h2>Provide Feedback</h2>
+                    <form onSubmit={(e) => e.preventDefault()}>
+                        <div className="rating-grid">
+                            <div className="form-group">
+                                <label>Self Motivation</label>
+                                <select
+                                    name="self_motivation"
+                                    value={feedback.self_motivation}
+                                    onChange={handleInputChange}
+                                >
+                                    {performanceOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Overall Performance</label>
-                        <select
-                            name="overall_performance"
-                            value={feedback.overall_performance}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                        >
-                            <option value="">Select</option>
-                            <option value="INP">In Progress</option>
-                            <option value="UNS">Unsatisfactory</option>
-                            <option value="N/A">Not Applicable</option>
-                        </select>
-                    </div>
+                            <div className="form-group">
+                                <label>Research Skills</label>
+                                <select
+                                    name="research_skills"
+                                    value={feedback.research_skills}
+                                    onChange={handleInputChange}
+                                >
+                                    {performanceOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Comments</label>
-                        <textarea
-                            name="comments"
-                            value={feedback.comments}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                            rows="4"
-                            placeholder="Enter additional comments"
-                        ></textarea>
-                    </div>
+                            <div className="form-group">
+                                <label>Research Progress</label>
+                                <select
+                                    name="research_progress"
+                                    value={feedback.research_progress}
+                                    onChange={handleInputChange}
+                                >
+                                    {performanceOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Supervisor Signature</label>
-                        <input
-                            type="text"
-                            name="supervisor_signature"
-                            value={feedback.supervisor_signature}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                            placeholder="Enter supervisor signature"
-                        />
-                    </div>
+                            <div className="form-group">
+                                <label>Overall Performance</label>
+                                <select
+                                    name="overall_performance"
+                                    value={feedback.overall_performance}
+                                    onChange={handleInputChange}
+                                >
+                                    {overallOptions.map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Graduate Program Director Signature</label>
-                        <input
-                            type="text"
-                            name="gpd_signature"
-                            value={feedback.gpd_signature}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                            placeholder="Enter GPD signature"
-                        />
-                    </div>
+                        <div className="comments-section">
+                            <div className="form-group">
+                                <label>Comments</label>
+                                <textarea
+                                    name="comments"
+                                    value={feedback.comments}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter additional comments"
+                                    rows="4"
+                                ></textarea>
+                            </div>
 
-                    <div className="mb-4">
-                        <label className="block text-gray-700 mb-2">Graduate Program Director Comment</label>
-                        <textarea
-                            name="gpd_comment"
-                            value={feedback.gpd_comment}
-                            onChange={handleInputChange}
-                            className="w-full border rounded p-2"
-                            rows="4"
-                            placeholder="Enter GPD comments"
-                        ></textarea>
-                    </div>
+                            <div className="form-group">
+                                <label>Graduate Program Director Comment</label>
+                                <textarea
+                                    name="gpd_comment"
+                                    value={feedback.gpd_comment}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter GPD comments"
+                                    rows="4"
+                                ></textarea>
+                            </div>
+                        </div>
 
-                    <div className="flex gap-2">
-                        <button
-                            type="button"
-                            onClick={handleSaveChanges}
-                            className={`px-4 py-2 text-white rounded transition-colors ${
-                                hasUnsavedChanges 
-                                ? 'bg-blue-500 hover:bg-blue-600' 
-                                : 'bg-gray-400 cursor-not-allowed'
-                            }`}
-                            disabled={!hasUnsavedChanges}
-                        >
-                            Save Changes
-                        </button>
-                        <button
-                            type="button"
-                            onClick={handleSubmitFeedback}
-                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
-                        >
-                            Submit Feedback
-                        </button>
-                    </div>
-                </form>
+                        <div className="signature-section">
+                            <div className="form-group">
+                                <label>Supervisor Signature</label>
+                                <input
+                                    type="text"
+                                    name="supervisor_signature"
+                                    value={feedback.supervisor_signature}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter supervisor signature"
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label>Graduate Program Director Signature</label>
+                                <input
+                                    type="text"
+                                    name="gpd_signature"
+                                    value={feedback.gpd_signature}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter GPD signature"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="form-actions">
+                            <button
+                                type="button"
+                                onClick={handleSaveChanges}
+                                className={`save-button ${!hasUnsavedChanges ? 'disabled' : ''}`}
+                                disabled={!hasUnsavedChanges}
+                            >
+                                Save Changes
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleSubmitFeedback}
+                                className="submit-button"
+                            >
+                                Submit Feedback
+                            </button>
+                        </div>
+                    </form>
+                </section>
             </div>
         </div>
     );
