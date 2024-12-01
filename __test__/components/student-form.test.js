@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import ProgressForm from '@/app/components/student-form'
+import ProgressForm from '@/app/dashboard/[id]/student-form'
 import { supabase } from '@/lib/client'
 
 // Mock Supabase client
