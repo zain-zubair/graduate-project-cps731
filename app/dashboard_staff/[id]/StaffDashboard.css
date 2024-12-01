@@ -1,74 +1,314 @@
-/* Approval Status Styles */
-.approval-status {
-    display: flex;
-    gap: 1.5rem;
-    padding: 0.75rem;
-    background-color: white;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
-    margin-left: auto;
+.dashboard-container {
+    min-height: 100vh;
+    background-color: #f5f7fa;
+    padding: 2rem;
 }
 
-.approval-indicator {
+.dashboard-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Header Styles */
+.dashboard-header {
+    background-color: white;
     display: flex;
+    justify-content: space-between;
     align-items: center;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    color: #1a365d;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.sign-out-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sign-out-button:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* Profile Section */
+.profile-section {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.profile-section h2 {
+    color: #1a365d;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+
+.profile-item {
+    display: flex;
+    flex-direction: column;
     gap: 0.5rem;
 }
 
-.approval-indicator span:last-child {
+.profile-item .label {
     color: #64748b;
     font-size: 0.875rem;
     font-weight: 500;
 }
 
+.profile-item .value {
+    color: #1a365d;
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+/* Forms Section */
+.forms-section {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 2rem;
+}
+
+.forms-section h2 {
+    color: #1a365d;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e2e8f0;
+}
+
+.forms-list {
+    display: grid;
+    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
+}
+
+.form-item {
+    background-color: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.form-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-content {
+    padding: 1.5rem;
+}
+
+.form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.5rem;
+}
+
+.form-info p {
+    margin: 0.25rem 0;
+    color: #475569;
+}
+
+.form-info strong {
+    color: #1a365d;
+}
+
+/* Approval Status */
+.approval-status {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.approval-status h3 {
+    color: #1a365d;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.status-indicators {
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 9999px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
     background-color: #e2e8f0;
     transition: all 0.3s ease;
 }
 
 .status-dot.approved {
     background-color: #22c55e;
-    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
 }
 
-/* Update form header for the new approval status */
-.form-header {
+.status-item span {
+    color: #475569;
+    font-size: 0.9rem;
+}
+
+/* Buttons */
+.form-actions {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.review-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.review-button:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.submit-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #22c55e;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.submit-button:hover {
+    background-color: #16a34a;
+    transform: translateY(-1px);
+}
+
+.action-buttons {
+    display: flex;
     gap: 1rem;
 }
 
-.form-info {
-    flex: 1;
-    min-width: 200px;
+.no-forms {
+    text-align: center;
+    padding: 3rem;
+    color: #64748b;
+    font-size: 1.1rem;
+    background-color: #f8fafc;
+    border-radius: 8px;
 }
 
-/* Responsive adjustments */
+/* Staff Select Section */
+.staff-select {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50vh;
+    font-size: 1.2rem;
+}
+
+.loading-container {
+    color: #64748b;
+}
+
+.error-container {
+    color: #dc2626;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .approval-status {
-        margin-left: 0;
-        width: 100%;
-        justify-content: space-around;
+    .dashboard-container {
         padding: 1rem;
+    }
+
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+        padding: 1.5rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .profile-grid {
+        grid-template-columns: 1fr;
     }
 
     .form-header {
         flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
     }
 
-    .approval-indicator {
+    .form-actions {
         flex-direction: column;
-        align-items: center;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .review-button,
+    .submit-button {
+        width: 100%;
         text-align: center;
     }
 
-    .status-dot {
-        margin-bottom: 0.25rem;
+    .status-indicators {
+        gap: 1rem;
     }
 }
