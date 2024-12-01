@@ -17,7 +17,7 @@ export async function POST(request) {
 
     const response = await resend.emails.send({
       from: 'onboarding@resend.dev',
-      to: to, // Must be a verified email in Resend dashboard
+      to: to,
       subject: subject,
       html: `<p>${message}</p>`
     });

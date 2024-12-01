@@ -1,4 +1,3 @@
-/* Main Layout */
 .dashboard-container {
     min-height: 100vh;
     background: linear-gradient(135deg, #f6f9fc 0%, #f1f5f9 100%);
@@ -10,7 +9,6 @@
     margin: 0 auto;
 }
 
-/* Header */
 .dashboard-header {
     background: white;
     padding: 1.75rem 2rem;
@@ -30,7 +28,6 @@
     letter-spacing: -0.025em;
 }
 
-/* Sign Out Button */
 .sign-out-button {
     padding: 0.75rem 1.5rem;
     background: linear-gradient(to right, #ef4444, #dc2626);
@@ -48,13 +45,12 @@
     box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
 }
 
-/* Profile Form Section */
 .profile-form {
     background: white;
-    padding: 1rem; /* Reduced padding */
+    padding: 1rem; 
     border-radius: 12px;
     box-shadow: 0 3px 5px -1px rgba(0, 0, 0, 0.1), 0 1px 3px -1px rgba(0, 0, 0, 0.06);
-    margin-bottom: 1.5rem; /* Reduced margin */
+    margin-bottom: 1.5rem; 
 }
 
 .space-y-4 > * + * {
@@ -65,16 +61,15 @@
     margin-top: 0.5rem;
 }
 
-/* Form Elements */
 input[type="text"],
 select {
     width: 100%;
-    padding: 0.5rem 0.75rem; /* Reduced padding */
+    padding: 0.5rem 0.75rem; 
     border: 1px solid #d1d5db;
-    border-radius: 8px; /* Reduced border radius */
+    border-radius: 8px; 
     background-color: #f9fafb;
     color: #1e293b;
-    font-size: 0.875rem; /* Smaller font size */
+    font-size: 0.875rem; 
     transition: all 0.2s ease;
 }
 
@@ -107,15 +102,14 @@ select {
     padding-right: 2.5rem;
 }
 
-/* Submit Button */
 .submit-button {
     width: 100%;
-    padding: 0.75rem; /* Reduced padding */
+    padding: 0.75rem;
     background: linear-gradient(to right, #3b82f6, #2563eb);
     color: white;
     border: none;
-    border-radius: 8px; /* Reduced border radius */
-    font-weight: 500; /* Reduced font weight */
+    border-radius: 8px; 
+    font-weight: 500; 
     cursor: pointer;
     transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
@@ -126,7 +120,6 @@ select {
     box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
 }
 
-/* Loading and Error States */
 .loading-state,
 .error-state {
     text-align: center;
@@ -144,14 +137,12 @@ select {
     color: #dc2626;
 }
 
-/* Welcome Message */
 .welcome-message {
     color: #475569;
     font-size: 1.1rem;
     margin: 1rem 0;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .dashboard-container {
         padding: 1rem;
@@ -178,7 +169,6 @@ select {
     }
 }
 
-/* Accessibility */
 @media (prefers-reduced-motion: reduce) {
     .sign-out-button,
     .submit-button {

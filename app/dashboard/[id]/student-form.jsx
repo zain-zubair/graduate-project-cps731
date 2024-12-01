@@ -49,7 +49,6 @@ const ProgressForm = ({ studentId, supervisorId }) => {
   
       const supervisorEmail = supervisorData.user.email;
   
-      // Insert the progress form
       const { error } = await supabase.from('progress_form').insert(formData);
   
       if (error) {

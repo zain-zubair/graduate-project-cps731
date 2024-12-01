@@ -16,7 +16,6 @@ export default function UserDashboard({ params }) {
   const [loading, setLoading] = useState(true)
   const [submissions, setSubmissions] = useState(null)
 
-  // Unwrap `params` with `React.use()`
   const unwrappedParams = React.use(params)
   const { id } = unwrappedParams || {}
 

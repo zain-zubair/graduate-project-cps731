@@ -9,7 +9,6 @@
     margin: 0 auto;
 }
 
-/* Navigation */
 .navigation {
     display: flex;
     align-items: center;
@@ -40,7 +39,6 @@
     transform: translateX(-2px);
 }
 
-/* Form Details Section */
 .form-details {
     background-color: white;
     border-radius: 12px;
@@ -106,7 +104,6 @@
     white-space: pre-wrap;
 }
 
-/* Feedback Form Section */
 .feedback-form {
     background-color: white;
     border-radius: 12px;
@@ -171,7 +168,6 @@
     resize: vertical;
 }
 
-/* Comments Section */
 .comments-section {
     margin-bottom: 2rem;
 }
@@ -180,7 +176,6 @@
     min-height: 120px;
 }
 
-/* Signature Section */
 .signature-section {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -191,7 +186,6 @@
     border-radius: 8px;
 }
 
-/* Form Actions */
 .form-actions {
     display: flex;
     gap: 1rem;
@@ -237,7 +231,6 @@
     transform: translateY(-1px);
 }
 
-/* Loading and Error States */
 .loading-state,
 .error-state {
     display: flex;
@@ -255,7 +248,6 @@
     color: #dc2626;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
     .feedback-page {
         padding: 1rem;
