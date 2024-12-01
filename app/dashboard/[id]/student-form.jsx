@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../../lib/client'
 
-const ProgressForm = ({ studentId }) => {
+const ProgressForm = ({ studentId, supervisorId }) => {
   const [formData, setFormData] = useState({
     term: '',
     start_term: '',
@@ -18,6 +18,7 @@ const ProgressForm = ({ studentId }) => {
     signature_date: '',
     status: '',
     student_id: studentId,
+    supervisor_id: supervisorId,
   })
 
   const handleChange = (e) => {
@@ -27,6 +28,12 @@ const ProgressForm = ({ studentId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    if (!supervisorId) {
+      alert('Cannot submit progress form if you have no assigned supervisor.')
+      return
+    }
+
     try {
       const { error } = await supabase.from('progress_form').insert(formData)
 
