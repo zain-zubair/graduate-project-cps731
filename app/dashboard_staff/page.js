@@ -24,7 +24,7 @@ export default function DashboardStaff(){
                     return;
                 }
     
-                // Check if user exists in your users table
+                // Check if user exists in user table
                 const { data: dbUser, error: dbError } = await supabase
                     .from('user')
                     .select('id')
@@ -151,9 +151,9 @@ export default function DashboardStaff(){
                         className="w-full p-2 border rounded"
                     >
                         <option value="">Select Role</option>
-                        <option value="Supervisor">Supervisor</option>
-                        <option value="Graduate Program Assistant">Graduate Program Assistant</option>
-                        <option value="Graduate Program Director">Graduate Program Director</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="graduateprogramassistant">Graduate Program Assistant</option>
+                        <option value="graduateprogramdirector">Graduate Program Director</option>
                     </select>
                 </div>
                 <button 
