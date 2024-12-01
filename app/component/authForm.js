@@ -37,6 +37,7 @@ export default function AuthForm({ role }) {
   }
 
   async function handleSignInWithOAuth(event) {
+    event.preventDefault()
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
